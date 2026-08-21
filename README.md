@@ -1,5 +1,5 @@
 Take a chance.
-Er et brætspil jeg opfat, for nogle år siden, men kun som et fysisk prototype.
+Er et brætspil jeg opfandt, for nogle år siden, men kun som et fysisk prototype.
 Jeg ønskede at det skulle blive til mere og havde fra start altid ønsket at føre dette projekt videre.
 Jeg manglede bare færdighederne indenfor programmering, så i takt med min uddannelse til datamatiker,
 har jeg her på mit 3. semester valgt at udvikle mit spil på en digital platform.
