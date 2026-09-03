@@ -52,8 +52,15 @@ public class GameBoard {
                     "maks 4 spiller"
             );
         }
+        if(players.isEmpty()){
+            throw new IllegalStateException(
+                    "Der skal minimum være 1 spiller");
+        }
 
         players.add(player);
         player.setGameBoard(this);
     }
+
+
+
 }
