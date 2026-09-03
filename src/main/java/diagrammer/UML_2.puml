@@ -1,0 +1,129 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class User {
+    -Long id
+    -String username
+    -String password
+    -String email
+}
+
+class Player {
+    -Long id
+    -String name
+    -int points
+    -int age
+    -User user
+    -GameBoard gameBoard
+    +addPoints(points : int)
+}
+
+class GameBoard {
+    -Long id
+    -List~Player~ players
+    -List~Field~ fields
+    -CardDeck cardDeck
+    -Coin coin
+    +createGameBoard()
+    +getField(x : int, y : int) : Field
+    +addPlayer(player : Player)
+    +removePlayer(player : Player)
+}
+
+class Field {
+    -Long id
+    -String type
+    -int xCoordinate
+    -int yCoordinate
+}
+
+class CardDeck {
+    -Long id
+    -List~QuestionCard~ questionCards
+    -List~FateCard~ fateCards
+    +drawQuestionCard() : QuestionCard
+    +drawFateCard() : FateCard
+    +shuffle()
+}
+
+class QuestionCard {
+    -Long id
+    -String subject
+    -String question
+    -String groupName
+    -String ageGroup
+    -String answer
+    +showQuestion() : String
+    +checkAnswer(answer : String) : boolean
+}
+
+class FateCard {
+    -Long id
+    -String text
+    -String groupName
+    -String action
+    -Monkeys monkeys
+    +performAction(player : Player)
+    +getText() : String
+}
+
+class Monkeys {
+    -Long id
+    -int coconuts
+    -int bananas
+    +play()
+    +giveBanana()
+    +giveCoconut()
+}
+
+class Coin {
+    -Long id
+    -boolean heads
+    +flip() : String
+}
+
+
+class Dice {
+    -int value
+    +roll() : int
+    +getValue() : int
+}
+
+class Rules {
+    -String introduction
+    -String ruleSet
+    +showIntroduction()
+    +showRules()
+}
+
+class Menu {
+    +showMenu()
+    +openSettings()
+}
+
+
+User "1" -- "0..*" Player : owns
+
+
+GameBoard "1" *- "1..4" Player : has
+
+GameBoard "1" *-up- "*" Field : contains
+GameBoard "1" *-- "1" CardDeck : has
+GameBoard "1" *-right- "1" Coin : has
+
+CardDeck "1" *-- "*" QuestionCard : contains
+CardDeck "1" *- "*" FateCard : contains
+
+
+FateCard "*" -> "1" Player : affects
+FateCard "1" *-down- "1" Monkeys : has
+
+
+Player "*" -right-> "1" Dice : uses
+
+
+Menu "1" --> "1" Rules : opens
+Menu "1" --> "1" User : login
+
+
+@enduml

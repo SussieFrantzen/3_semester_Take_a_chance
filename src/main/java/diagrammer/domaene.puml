@@ -1,0 +1,24 @@
+@startuml
+class User
+class Game
+class Player
+class Gameboard
+class Field
+class Artefact
+
+
+Artefact <|-- Brik
+
+User - Game
+
+
+Player "4" -- "1" User
+Game "1" *- "1" Gameboard
+
+Gameboard "1" *- "*" Field
+Gameboard "1" -- "*" Player
+Gameboard "1" *-- "*" Artefact
+
+Player "1" - "1" Brik
+
+@enduml

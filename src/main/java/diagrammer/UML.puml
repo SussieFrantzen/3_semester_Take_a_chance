@@ -1,0 +1,111 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class GameBoard {
+    -Field[] fields
+    -Coin coin
+    -CardDeck cardDeck
+    +createGameBoard()
+    +getField(x : int, y : int) : Field
+}
+
+class Field {
+    -String type
+    -int xCoordinate
+    -int yCoordinate
+    +getType() : String
+    +getXCoordinate() : int
+    +getYCoordinate() : int
+}
+
+class Player {
+    -String name
+    -int points
+    -int age
+    +Player(name : String, age : int)
+    +addPoints(points : int)
+    +getName() : String
+    +getPoints() : int
+    +getAge() : int
+}
+
+class Dice {
+    -int value
+    +roll() : int
+    +getValue() : int
+}
+
+class Coin {
+    -boolean heads
+    -boolean tails
+    +flip() : String
+}
+
+class QuestionCard {
+    -int ID
+    -String subject
+    -String question
+    -String group
+    -String ageGroup
+    -String answer
+    +showQuestion() : String
+    +checkAnswer(answer : String) : boolean
+}
+
+class FateCard {
+    -int ID
+    -String text
+    -String group
+    -String action
+    +performAction()
+    +getText() : String
+}
+
+class CardDeck {
+    -List~QuestionCard~ questionCards
+    -List~FateCard~ fateCards
+    +drawQuestionCard() : QuestionCard
+    +drawFateCard() : FateCard
+    +shuffle()
+}
+
+class Monkeys {
+    -int coconuts
+    -int bananas
+    +play()
+    +giveBanana()
+    +giveCoconut()
+}
+
+class Rules {
+    -String introduction
+    -String ruleSet
+    +showIntroduction()
+    +showRules()
+}
+
+class Menu {
+    -String settings
+    -String login
+    +showMenu()
+    +openSettings()
+    +login()
+}
+
+GameBoard "1" *-- "many" Field : contains
+GameBoard "1" *-right- "1" CardDeck : has
+GameBoard "1" *-- "1" Coin
+
+CardDeck "1" *-- "many" QuestionCard : contains
+CardDeck "1" *-up- "many" FateCard : contains
+
+Player "many" -left-> "1" Dice : uses
+Player "many" --> "1" GameBoard : plays on
+
+FateCard "many" -left-> "1" Player : affects
+FateCard "0.*" -up-> "0..1" Monkeys : may use
+
+Menu "1" --> "1" Rules : opens
+Menu "1" --> "many" Player : login
+
+@enduml
