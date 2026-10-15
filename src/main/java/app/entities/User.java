@@ -17,7 +17,7 @@ import java.util.List;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private int id;
 
     @Column(nullable = false, unique = true)
     private String username;
@@ -29,14 +29,13 @@ public class User {
     private String email;
 
     @OneToMany(mappedBy = "user")
-    private List<Player> players = new ArrayList<>();
+    private List<Game> games = new ArrayList<>();
 
     public User(String username, String password, String email) {
         this.username = username;
         this.password = password;
         this.email = email;
     }
-
 
 
 }

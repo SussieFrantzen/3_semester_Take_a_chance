@@ -5,16 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Entity
-@Table(name = "monkeys")
-@Getter
-@Setter
-@NoArgsConstructor
-public class Monkeys {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Monkeys {
 
     private int coconuts;
 

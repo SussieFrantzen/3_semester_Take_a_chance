@@ -38,29 +38,6 @@ public class GameBoard {
     )
     private CardDeck cardDeck;
 
-    @OneToOne(
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-
-    private Coin coin;
-
-    public void addPlayer(Player player) {
-
-        if (players.size() >= 4) {
-            throw new IllegalStateException(
-                    "maks 4 spiller"
-            );
-        }
-        if(players.isEmpty()){
-            throw new IllegalStateException(
-                    "Der skal minimum være 1 spiller");
-        }
-
-        players.add(player);
-        player.setGameBoard(this);
-    }
-
 
 
 }

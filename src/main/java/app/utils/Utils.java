@@ -1,6 +1,6 @@
 package app.utils;
 
-import app.exceptions.ApiException;
+import app.exeption.ApiException;
 
 import java.io.IOException;
 import java.io.InputStream;

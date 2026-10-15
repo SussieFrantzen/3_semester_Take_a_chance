@@ -39,7 +39,4 @@ public class FateCard {
         this.action = action;
     }
 
-    public void performAction(Player player) {
-        // TODO: implement game logic
-    }
 }
