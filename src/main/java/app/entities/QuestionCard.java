@@ -6,7 +6,15 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "question_cards")
+@Table(
+        name = "question_cards",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_question_card_fingerprint",
+                        columnNames = "fingerprint"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -16,15 +24,24 @@ public class QuestionCard {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
     private String subject;
 
-    @Column(length = 1000)
+    @Column(nullable = false, length = 1000)
     private String question;
 
-    private String groupName;
+    @Column(nullable = false, length = 100)
+    private String groupName = "Questencard";
 
+    @Column(nullable = false, length = 20)
     private String ageGroup;
 
-    @Column(length = 1000)
+    @Column(nullable = false, length = 1000)
     private String answer;
+
+    @Column(nullable = false, length = 20)
+    private String difficulty;
+
+    @Column(nullable = false, length = 64)
+    private String fingerprint;
 }

@@ -38,6 +38,12 @@ public class GameBoard {
     )
     private CardDeck cardDeck;
 
+    @Column(nullable = false)
+    private String boardName;
+
+    @Column(nullable = false)
+    private String subject;
+
 
 
 }
