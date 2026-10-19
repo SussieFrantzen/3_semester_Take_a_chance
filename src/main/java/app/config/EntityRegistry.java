@@ -15,5 +15,7 @@ final class EntityRegistry {
         configuration.addAnnotatedClass(GameBoard.class);
         configuration.addAnnotatedClass(QuestionCard.class);
         configuration.addAnnotatedClass(User.class);
+        configuration.addAnnotatedClass(Game.class);
+        configuration.addAnnotatedClass(Field.class);
     }
 }

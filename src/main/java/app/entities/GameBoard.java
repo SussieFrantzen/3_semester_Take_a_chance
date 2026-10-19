@@ -24,6 +24,8 @@ public class GameBoard {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
+    @OrderColumn(name = "field_order")
+    private List<Field> field = new ArrayList<>();
     private List<Player> players = new ArrayList<>();
 
     @OneToMany(
@@ -43,7 +45,6 @@ public class GameBoard {
 
     @Column(nullable = false)
     private String subject;
-
 
 
 }

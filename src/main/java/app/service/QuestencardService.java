@@ -27,14 +27,11 @@ public class QuestencardService {
         this.aiService = aiService;
     }
 
-    public QuestionCard activate(
-            Field field,
-            Player player,
-            GameBoard board)
+    public QuestionCard activate(Field field, Player player, GameBoard board)
             throws IOException, InterruptedException {
 
         if (field == null
-                || !"QUESTENCARD".equals(field.getType())) {
+                || !"QUESTIONFIELD".equals(field.getType())) {
             return null;
         }
 
@@ -74,7 +71,7 @@ public class QuestencardService {
             );
         }
 
-        // Vælg et tilfældigt kort fra databasen.
+
         QuestionCard selected = cards.get(
                 ThreadLocalRandom.current().nextInt(cards.size())
         );

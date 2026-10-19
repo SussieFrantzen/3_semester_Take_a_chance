@@ -1,0 +1,247 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "Entities" {
+
+class Coin {
+        - boolean heads
+        + flip() : String
+    }
+
+    class Monkeys {
+        - Long id
+        - int coconuts
+        - int bananas
+        + play()
+        + giveBanana()
+        + giveCoconut()
+    }
+
+    class Rules {
+        - String introduction
+        - String ruleSet
+        + showIntroduction()
+        + showRules()
+    }
+
+    class Menu {
+        + showMenu()
+        + openSettings()
+    }
+
+    class User {
+        - int id
+        - String username
+        - String password
+        - String email
+    }
+
+    class Game {
+        - Long id
+        - User user
+        - GameBoard gameBoard
+        - List<Player> players
+        - int currentPlayerIndex
+        - int goCount
+        + getCurrentPlayer() : Player
+        + addPlayer(player : Player)
+        + endTurn()
+    }
+
+    class Player {
+        - Long id
+        - String name
+        - int points
+        - int age
+        - int position
+        - Game game
+        - GameBoard gameBoard
+        + addPoints(points : int)
+    }
+
+    class GameBoard {
+        - Long id
+        - List<Field> field
+        - List<Player> players
+        - List<Field> fields
+        - CardDeck cardDeck
+        - String boardName
+        - String subject
+    }
+
+    class Field {
+        - Long id
+        - String type
+        - int xCoordinate
+        - int yCoordinate
+    }
+
+    class CardDeck {
+        - Long id
+        - List<QuestionCard> questionCards
+        - List<FateCard> fateCards
+        + addQuestionCard(card : QuestionCard)
+        + drawQuestionCard(ageGroup : String) : QuestionCard
+        + drawFateCard() : FateCard
+    }
+
+    class QuestionCard {
+        - Long id
+        - String subject
+        - String groupName
+        - String ageGroup
+        - String question
+        - String answer
+        - String difficulty
+        - String fingerprint
+    }
+
+    class FateCard {
+        - Long id
+        - String text
+        - String groupName
+        - String action
+    }
+
+    class Dice {
+        - int value
+        + roll() : int
+        + getValue() : int
+    }
+}
+
+package "Services" {
+
+    class GameService {
+        - Map<Long, Game> activeGames
+        - Dice dice
+        + getGame(gameId : Long) : Game
+        + playGoOrBadLuck(gameId : Long) : TurnResult
+        + completeMonkeyChallenge(gameId : Long)
+        + completeCardAction(gameId : Long)
+        - moveForward(game : Game, player : Player, amount : int)
+        - finishTurn(game : Game)
+        - saveGame(game : Game)
+    }
+
+    class GameCreationService {
+        + createGame(userId : Integer, game : Game) : Game
+        - prepareQuestionCards(game : Game)
+    }
+
+    class QuestencardService {
+        + activate(field : Field, player : Player, board : GameBoard) : QuestionCard
+    }
+
+    class OpenAiQuestionCardService {
+        + generateAndSaveCards(subject : String, ageGroup : String) : List<QuestionCard>
+        - generateQuestions(subject : String, ageGroup : String)
+        - createFingerprint(subject : String, ageGroup : String, question : String)
+    }
+    class AgeGroupService {
+        + getAgeGroup(age : int) : String
+    }
+
+    class MonkeyChallengeService {
+        - Map<Long, ChallengeState> activeChallenges
+        + startChallenge(game : Game, startingPlayer : Player, dice : Dice) : ChallengeStatus
+        + drawCard(gameId : Long) : DrawResult
+        + isChallengeActive(gameId : Long) : boolean
+        + finishChallenge(gameId : Long)
+        - getActiveChallenge(gameId : Long) : ChallengeState
+        - movePlayerBack(player : Player) : String
+
+        class ChallengeState {
+            - List<Player> turnOrder
+            - List<Boolean> bag
+            - int initialCoconuts
+            - int currentPlayerIndex
+            - boolean finished
+            - isFinished() : boolean
+
+        class ChallengeStatus <<record>>
+        class DrawResult <<record>>
+
+    }
+}
+
+package "DAO" {
+
+    class UserDAO {
+        + create(user : User) : User
+        + getUserById(id : Integer) : User
+        + getUserByUserName(userName : String) : User
+    }
+
+    class QuestionCardDAO {
+        + findBySubjectAndAgeGroup(subject : String, ageGroup : String) : List<QuestionCard>
+        + findByFingerprint(fingerprint : String) : Optional<QuestionCard>
+        + saveIfNotExists(card : QuestionCard) : boolean
+    }
+}
+
+package "DTO" {
+
+    class UserDTO {
+        - Integer id
+        - String username
+    }
+
+    class TurnResult <<record>> {
+        + String playerName
+        + String outcome
+        + int movedFields
+        + int position
+        + String landedFieldType
+        + boolean turnContinues
+        + boolean challengeStarted
+        + FateCard fateCard
+        + QuestionCard questionCard
+        + boolean turnMustWait
+    }
+}
+
+' Entity-relationer
+User "1" -- "0..*" Game : owns
+Game "1" -- "1" GameBoard : uses
+Game "1" *-- "1..4" Player : players
+GameBoard "1" *-- "0..*" Field : fields
+GameBoard "1" *-right- "0..1" CardDeck : cardDeck
+CardDeck "1" *-- "0..*" QuestionCard : questionCards
+CardDeck "1" *-- "0..*" FateCard : fateCards
+Player "*" -left-> "0..1" GameBoard : uses
+GameBoard "1" *-- "1" Coin : has
+FateCard "1" *-- "1" Monkeys : has
+Menu "1" --> "1" Rules : opens
+Menu ..> User : login
+
+' Service-afhængigheder
+GameCreationService ..> UserDAO
+GameCreationService ..> QuestionCardDAO
+GameCreationService ..> OpenAiQuestionCardService
+GameCreationService ..> AgeGroupService
+GameCreationService ..> Game
+
+GameService ..> Game
+GameService ..> MonkeyChallengeService
+GameService ..> AgeGroupService
+GameService ..> Dice
+GameService ..> TurnResult
+
+QuestencardService ..> QuestionCardDAO
+QuestencardService ..> OpenAiQuestionCardService
+QuestencardService ..> AgeGroupService
+QuestencardService ..> QuestionCard
+
+OpenAiQuestionCardService ...> QuestionCardDAO
+OpenAiQuestionCardService ...> QuestionCard
+
+MonkeyChallengeService ..> Dice
+MonkeyChallengeService ..> Player
+MonkeyChallengeService ..> Game
+
+UserDAO .right.> User
+QuestionCardDAO ..> QuestionCard
+
+@enduml
+@enduml

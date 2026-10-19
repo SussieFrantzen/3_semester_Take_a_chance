@@ -1,19 +1,17 @@
 package app.entities;
 
-
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 
-@NoArgsConstructor
+@Entity
+@Table(name = "players")
 @Getter
 @Setter
-@ToString
-@Builder
-@AllArgsConstructor
-@Entity
-@Table(name = "player")
-
+@NoArgsConstructor
 public class Player {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -26,6 +24,10 @@ public class Player {
 
     private boolean shieldOfDestiny;
 
+
+    @Column(nullable = false)
+    private int position = 0;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
@@ -34,18 +36,33 @@ public class Player {
     @JoinColumn(name = "game_board_id")
     private GameBoard gameBoard;
 
-    public Player(String name, int age, User user, Boolean shieldOfDestiny) {
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "game_id")
+    private Game game;
+
+    public Player(String name, int age, User user) {
         this.name = name;
         this.age = age;
         this.user = user;
         this.points = 0;
-        this.shieldOfDestiny=shieldOfDestiny;
+        this.shieldOfDestiny = false;
+        this.position = 0;
     }
 
     public void addPoints(int points) {
         this.points += points;
     }
 
+    public boolean hasShieldOfDestiny() {
+        return shieldOfDestiny;
+    }
 
+    public void activateShieldOfDestiny() {
+        this.shieldOfDestiny = true;
+    }
+
+    public void useShieldOfDestiny() {
+        this.shieldOfDestiny = false;
+    }
 
 }

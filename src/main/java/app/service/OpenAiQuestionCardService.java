@@ -93,14 +93,7 @@ public class OpenAiQuestionCardService {
                 .build();
     }
 
-    /**
-     * Genererer 10 spørgsmålskort og gemmer kun nye kort.
-     *
-     * subject kommer fra den valgte bane.
-     * ageGroup kommer fra spillerens alder.
-     *
-     * Returnerer kun de kort, der blev gemt som nye.
-     */
+
     public List<QuestionCard> generateAndSaveCards(
             String subject,
             String ageGroup)
