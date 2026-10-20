@@ -8,6 +8,53 @@ import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Optional;
 
+public class QuestionCardDAO extends JPADAO<QuestionCard, Long> {
+
+    public QuestionCardDAO() {
+        super(QuestionCard.class);
+    }
+
+    public List<QuestionCard> findBySubjectAndAgeGroup(
+            String subject,
+            String ageGroup) {
+
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("""
+                    SELECT q
+                    FROM QuestionCard q
+                    WHERE q.subject = :subject
+                      AND q.ageGroup = :ageGroup
+                    ORDER BY q.id
+                    """, QuestionCard.class)
+                    .setParameter("subject", subject)
+                    .setParameter("ageGroup", ageGroup)
+                    .getResultList();
+        }
+    }
+
+    public Optional<QuestionCard> findByFingerprint(
+            String fingerprint) {
+
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("""
+                    SELECT q
+                    FROM QuestionCard q
+                    WHERE q.fingerprint = :fingerprint
+                    """, QuestionCard.class)
+                    .setParameter("fingerprint", fingerprint)
+                    .getResultStream()
+                    .findFirst();
+        }
+    }
+
+
+
+
+
+
+/*
+
+
 public class QuestionCardDAO {
 
     private final EntityManagerFactory emf;
@@ -49,6 +96,10 @@ public class QuestionCardDAO {
         }
     }
 
+
+
+ */
+
     public boolean saveIfNotExists(QuestionCard card) {
         EntityManager em = emf.createEntityManager();
 
@@ -81,4 +132,5 @@ public class QuestionCardDAO {
             em.close();
         }
     }
+
 }

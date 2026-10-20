@@ -25,20 +25,19 @@ public class GameBoard {
             orphanRemoval = true
     )
     @OrderColumn(name = "field_order")
-    private List<Field> field = new ArrayList<>();
-    private List<Player> players = new ArrayList<>();
-
-    @OneToMany(
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
     private List<Field> fields = new ArrayList<>();
 
-    @OneToOne(
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
+    @OneToMany(mappedBy = "gameBoard")
+    private List<Player> players = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "game_name_id", nullable = false)
+    private GameName gameName;
+
+    @ManyToOne
+    @JoinColumn(name = "card_deck_id")
     private CardDeck cardDeck;
+
 
     @Column(nullable = false)
     private String boardName;

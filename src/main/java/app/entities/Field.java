@@ -11,7 +11,6 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class Field {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -21,6 +20,10 @@ public class Field {
     private int xCoordinate;
 
     private int yCoordinate;
+
+    @ManyToOne
+    @JoinColumn(name = "game_board_id")
+    private GameBoard gameBoard;
 
     public Field(String type, int xCoordinate, int yCoordinate) {
         this.type = type;
