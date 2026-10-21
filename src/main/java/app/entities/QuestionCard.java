@@ -35,7 +35,7 @@ public class QuestionCard {
     private String question;
 
     @Column(nullable = false, length = 100)
-    private String groupName = "Questencard";
+    private String groupName = "QuestionCard";
 
     @Column(nullable = false, length = 20)
     private String ageGroup;

@@ -131,7 +131,7 @@ public class GameCreationService {
 
 
             if (cards.size() < 200) {
-                aiService.generateAndSaveCards(subject, ageGroup);
+                aiService.generateAndSaveCards(subject, ageGroup, deck);
 
                 cards = questionCardDAO.findBySubjectAndAgeGroup(
                         subject, ageGroup

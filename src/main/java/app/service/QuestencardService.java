@@ -46,12 +46,24 @@ public class QuestencardService {
             );
         }
 
+
         List<QuestionCard> cards =
                 questionCardDAO.findBySubjectAndAgeGroup(
                         subject, ageGroup);
 
+
+
+        CardDeck deck = board.getCardDeck();
+
+        if (deck == null) {
+            throw new IllegalStateException(
+                    "Spillebanen mangler en kortbunke."
+            );
+        }
+
+
         if (cards.isEmpty()) {
-            aiService.generateAndSaveCards(subject, ageGroup);
+            aiService.generateAndSaveCards(subject, ageGroup, deck);
 
             cards = questionCardDAO.findBySubjectAndAgeGroup(
                     subject, ageGroup);
@@ -63,13 +75,6 @@ public class QuestencardService {
             );
         }
 
-        CardDeck deck = board.getCardDeck();
-
-        if (deck == null) {
-            throw new IllegalStateException(
-                    "Spillebanen mangler en kortbunke."
-            );
-        }
 
 
         QuestionCard selected = cards.get(

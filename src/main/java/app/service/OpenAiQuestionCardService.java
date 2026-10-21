@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import app.entities.CardDeck;
 
 public class OpenAiQuestionCardService {
 
@@ -35,41 +36,41 @@ public class OpenAiQuestionCardService {
     );
 
     private static final String SCHEMA = """
-        {
-          "type": "object",
-          "properties": {
-            "questions": {
-              "type": "array",
-              "minItems": 10,
-              "maxItems": 10,
-              "items": {
-                "type": "object",
-                "properties": {
-                  "question": {"type": "string"},
-                  "answer": {"type": "string"},
-                  "difficulty": {
-                    "type": "string",
-                    "enum": [
-                      "meget let",
-                      "let",
-                      "middel",
-                      "svær"
-                    ]
+            {
+              "type": "object",
+              "properties": {
+                "questions": {
+                  "type": "array",
+                  "minItems": 10,
+                  "maxItems": 10,
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "question": {"type": "string"},
+                      "answer": {"type": "string"},
+                      "difficulty": {
+                        "type": "string",
+                        "enum": [
+                          "meget let",
+                          "let",
+                          "middel",
+                          "svær"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "question",
+                      "answer",
+                      "difficulty"
+                    ],
+                    "additionalProperties": false
                   }
-                },
-                "required": [
-                  "question",
-                  "answer",
-                  "difficulty"
-                ],
-                "additionalProperties": false
-              }
+                }
+              },
+              "required": ["questions"],
+              "additionalProperties": false
             }
-          },
-          "required": ["questions"],
-          "additionalProperties": false
-        }
-        """;
+            """;
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient client;
@@ -94,15 +95,19 @@ public class OpenAiQuestionCardService {
     }
 
 
-    public List<QuestionCard> generateAndSaveCards(
-            String subject,
-            String ageGroup)
+    public List<QuestionCard> generateAndSaveCards(String subject, String ageGroup, CardDeck deck)
             throws IOException, InterruptedException {
 
         if (subject == null || subject.isBlank()
                 || ageGroup == null || ageGroup.isBlank()) {
+
             throw new IllegalArgumentException(
                     "Emne og aldersgruppe skal udfyldes."
+            );
+        }
+        if (deck == null) {
+            throw new IllegalArgumentException(
+                    "Kortbunken skal angives."
             );
         }
 
@@ -138,6 +143,7 @@ public class OpenAiQuestionCardService {
             }
 
             QuestionCard card = new QuestionCard();
+            card.setCardDeck(deck);
             card.setSubject(subject);
             card.setGroupName("Questencard");
             card.setAgeGroup(ageGroup);
@@ -171,39 +177,68 @@ public class OpenAiQuestionCardService {
         input.addObject()
                 .put("role", "system")
                 .put("content", """
-                    Du genererer spørgsmålskort til brætspillet
-                    Questencard.
-
-                    Skriv på dansk.
-
-                    Spørgsmålene skal være fagligt korrekte,
-                    have ét tydeligt korrekt svar og passe til
-                    den angivne aldersgruppe.
-
-                    Undgå gentagelser inden for samme generation.
-
-                    Tilpas sværhedsgraden til alderen.
-                    Brug konkrete eksempler fra hverdagen,
-                    terninger, mønter, kort og sandsynlighed,
-                    når emnet lægger op til det.
-
-                    Returner kun data i det angivne JSON-format.
-                    """);
+                         Du genererer spørgsmålskort til brætspillet
+                         Questencard.
+                        
+                        Skriv på dansk.
+                        
+                         STIL OG FORMULERING:
+                         - Bland genkendelige hverdagssituationer med små gåder
+                           og tankevækkende udfordringer.
+                         - Brug fx situationer fra spil, skole, indkøb, fritid,
+                           venner og familie, når de passer til emnet.
+                         - Formuler spørgsmålene naturligt og levende, så spilleren
+                           får lyst til at finde svaret.
+                         - Nogle spørgsmål må gerne tage udgangspunkt i en
+                           hverdagssituation, mens andre gerne må være korte gåder.
+                         - Brug let humor eller en overraskende vinkel, når det
+                           falder naturligt, men undgå tvungne vittigheder.
+                         - Undgå lange historier og unødvendige detaljer.
+                         - Tilpas sprog, scenarier og sværhedsgrad til aldersgruppen.
+                         - Sørg for, at scenariet hjælper med at forstå opgaven
+                           og ikke gør den mere forvirrende.
+                         - Alle spørgsmål skal være fagligt korrekte og have
+                           ét tydeligt korrekt svar.
+                         - Hvis et spørgsmål bygger på en antagelse, skal den
+                           fremgå tydeligt.
+                        
+                          Spørgsmålene skal være fagligt korrekte,
+                          have ét tydeligt korrekt svar og passe til
+                          den angivne aldersgruppe.
+                        
+                          Undgå gentagelser inden for samme generation.
+                        
+                          Tilpas sværhedsgraden til alderen.
+                          Brug konkrete eksempler fra hverdagen,
+                          terninger, mønter, kort og sandsynlighed,
+                          når emnet lægger op til det.
+                        
+                          Returner kun data i det angivne JSON-format.
+                        """);
 
         input.addObject()
                 .put("role", "user")
                 .put("content", """
-                    Generer præcis 10 spørgsmålskort.
-
-                    Emne: %s
-                    Aldersgruppe: %s
-
-                    Fordel spørgsmålene mellem sværhedsgraderne:
-                    meget let, let, middel og svær.
-
-                    Hvert spørgsmål skal have et korrekt svar
-                    og én sværhedsgrad.
-                    """.formatted(subject, ageGroup));
+                        Generer præcis 10 spørgsmålskort.
+                        
+                        Emne: %s
+                        Aldersgruppe: %s
+                        
+                            Aldersgrupperne betyder:
+                            - 6-9: børn fra 6 til og med 9 år
+                            - 10-12: børn fra 10 til og med 12 år
+                            - 13-15: unge fra 13 til og med 15 år
+                            - 16+: personer på 16 år eller derover
+                        
+                            Tilpas ordforråd, kompleksitet og nødvendige forkundskaber
+                            til den angivne aldersgruppe.
+                        
+                        Fordel spørgsmålene mellem sværhedsgraderne:
+                        meget let, let, middel og svær.
+                        
+                        Hvert spørgsmål skal have et korrekt svar
+                        og én sværhedsgrad.
+                        """.formatted(subject, ageGroup));
 
         var format = body.putObject("text").putObject("format");
 
