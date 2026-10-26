@@ -31,6 +31,9 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Game> games = new ArrayList<>();
 
+    @Column(nullable = false)
+    private boolean hasPlayedBefore = false;
+
     public User(String username, String password, String email) {
         this.username = username;
         this.password = password;

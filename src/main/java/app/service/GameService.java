@@ -27,6 +27,9 @@ public class GameService {
     private final AgeGroupService ageGroupService =
             new AgeGroupService();
 
+    private final QuestionCardDAO questionCardDAO =
+            new QuestionCardDAO();
+
 
     private final Map<Long, Game> activeGames = new HashMap<>();
 
@@ -158,7 +161,23 @@ public class GameService {
 
                 String ageGroup = ageGroupService.getAgeGroup(player.getAge()); // spillerens alder hentes ned
 
-                questionCard = deck.drawQuestionCard(ageGroup); // spørgsmåls kortet udvælges fra alderen
+                List<QuestionCard> matchingCards =
+                        questionCardDAO.findByDeckAndAgeGroup(
+                                deck.getId(),
+                                ageGroup
+                        );
+
+                if (matchingCards.isEmpty()) {
+                    throw new IllegalStateException(
+                            "Der findes ingen spørgsmål til aldersgruppen "
+                                    + ageGroup
+                    );
+                }
+
+                int index = ThreadLocalRandom.current()
+                        .nextInt(matchingCards.size());
+
+                questionCard = matchingCards.get(index);
 
                 if (questionCard == null) {
                     throw new IllegalStateException(

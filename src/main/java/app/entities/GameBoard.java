@@ -45,5 +45,9 @@ public class GameBoard {
     @Column(nullable = false)
     private String subject;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private BoardLength boardLength;
+
 
 }

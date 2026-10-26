@@ -63,7 +63,19 @@ public class QuestencardService {
 
 
         if (cards.isEmpty()) {
-            aiService.generateAndSaveCards(subject, ageGroup, deck);
+            aiService.generateAndSaveCards(
+                    subject,
+                    ageGroup,
+                    deck,
+                    10
+            );
+
+            aiService.generateAndSaveCards(
+                    subject,
+                    ageGroup,
+                    deck,
+                    10
+            );
 
             cards = questionCardDAO.findBySubjectAndAgeGroup(
                     subject, ageGroup);

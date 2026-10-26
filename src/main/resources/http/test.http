@@ -1,0 +1,10 @@
+### GET request to example server
+GET https://examples.http-client.intellij.net/get
+    ?generated-in=IntelliJ IDEA
+
+### Test terning
+POST http://localhost:7070/dice/roll
+
+### Test mønt
+POST http://localhost:7070/coin/flip
+###

@@ -97,8 +97,158 @@ public class GameCreationService {
             em.close();
         }
     }
+    private static final int MIN_QUESTION_CARDS = 20;
+    private static final int MAX_QUESTION_CARDS = 200;
+    private static final int CARDS_PER_GENERATION = 10;
 
+    private void prepareQuestionCards(Game game)
+            throws IOException, InterruptedException {
 
+        GameBoard board = game.getGameBoard();
+        CardDeck deck = board.getCardDeck();
+        String subject = board.getSubject();
+
+        if (subject == null || subject.isBlank()) {
+            throw new IllegalStateException(
+                    "Spillepladen mangler et emne."
+            );
+        }
+
+        Set<String> preparedAgeGroups = new HashSet<>();
+
+        for (Player player : game.getPlayers()) {
+
+            String ageGroup =
+                    ageGroupService.getAgeGroup(player.getAge());
+
+            // Behandl kun hver aldersgruppe én gang.
+            if (!preparedAgeGroups.add(ageGroup)) {
+                continue;
+            }
+
+            List<QuestionCard> cards =
+                    questionCardDAO.findBySubjectAndAgeGroup(
+                            subject, ageGroup
+                    );
+
+            int existingCount = cards.size();
+
+            // Hvis der allerede er mindst 20 spørgsmål,
+            // skal der ikke genereres flere.
+            while (existingCount < MIN_QUESTION_CARDS
+                    && existingCount < MAX_QUESTION_CARDS) {
+
+                int amountToGenerate = Math.min(
+                        CARDS_PER_GENERATION,
+                        MAX_QUESTION_CARDS - existingCount
+                );
+
+                List<QuestionCard> generated =
+                        aiService.generateAndSaveCards(
+                                subject,
+                                ageGroup,
+                                deck,
+                                amountToGenerate
+                        );
+
+                // Hent det faktiske antal fra databasen igen.
+                cards = questionCardDAO.findBySubjectAndAgeGroup(
+                        subject, ageGroup
+                );
+
+                int newCount = cards.size();
+
+                // Undgå et uendeligt loop, hvis AI'en
+                // kun returnerer dubletter.
+                if (newCount <= existingCount) {
+                    throw new IllegalStateException(
+                            "Der kunne ikke gemmes nok nye spørgsmål "
+                                    + "til aldersgruppen " + ageGroup
+                                    + ". Prøv igen."
+                    );
+                }
+
+                existingCount = newCount;
+            }
+
+            if (existingCount < MIN_QUESTION_CARDS) {
+                throw new IllegalStateException(
+                        "Der er færre end 20 spørgsmål til aldersgruppen "
+                                + ageGroup
+                );
+            }
+
+            // Sørg for, at kortene er knyttet til den aktuelle bunke.
+            for (QuestionCard card : cards) {
+                deck.addQuestionCard(card);
+            }
+        }
+    }
+
+   /*
+    private static final int MIN_QUESTION_CARDS = 20;
+    private static final int MAX_QUESTION_CARDS = 200;
+    private static final int CARDS_PER_GENERATION = 10;
+
+    private void prepareQuestionCards(Game game)
+            throws IOException, InterruptedException {
+
+        GameBoard board = game.getGameBoard();
+        CardDeck deck = board.getCardDeck();
+        String subject = board.getSubject();
+
+        if (subject == null || subject.isBlank()) {
+            throw new IllegalStateException(
+                    "Spillepladen mangler et emne."
+            );
+        }
+
+        Set<String> preparedAgeGroups = new HashSet<>();
+
+        for (Player player : game.getPlayers()) {
+            String ageGroup =
+                    ageGroupService.getAgeGroup(player.getAge());
+
+            // Undgå at kontrollere samme aldersgruppe flere gange.
+            if (!preparedAgeGroups.add(ageGroup)) {
+                continue;
+            }
+
+            List<QuestionCard> cards =
+                    questionCardDAO.findBySubjectAndAgeGroup(
+                            subject, ageGroup
+                    );
+
+            int existingCount = cards.size();
+
+// Hvis der er mindst 20 spørgsmål, skal der ikke genereres flere.
+            if (existingCount >= MIN_QUESTION_CARDS) {
+                continue;
+            }
+
+// Beregn, hvor mange pladser der er tilbage op til 200.
+            int remainingCapacity = MAX_QUESTION_CARDS - existingCount;
+
+            if (remainingCapacity <= 0) {
+                continue;
+            }
+
+// Generér højst 10 spørgsmål og aldrig flere end den resterende plads.
+            int amountToGenerate =
+                    Math.min(CARDS_PER_GENERATION, remainingCapacity);
+
+// Generér det beregnede antal spørgsmål.
+            aiService.generateAndSaveCards(
+                    subject,
+                    ageGroup,
+                    deck,
+                    amountToGenerate
+            );
+        }
+    }
+
+    */
+/*
     private void prepareQuestionCards(Game game)
             throws IOException, InterruptedException {
 
@@ -165,4 +315,6 @@ public class GameCreationService {
             }
         }
     }
+
+ */
 }

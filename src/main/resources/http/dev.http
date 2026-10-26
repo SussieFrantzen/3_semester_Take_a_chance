@@ -1,0 +1,10 @@
+###
+POST https://api.openai.com/v1/responses
+Authorization: Bearer {{api}}
+Content-Type: application/json
+Accept: application/json
+
+{
+  "model": "gpt-6-astra",
+  "input": "Write a haiku about AI"
+}

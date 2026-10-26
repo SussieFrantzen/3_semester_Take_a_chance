@@ -8,29 +8,31 @@ import jakarta.persistence.EntityManagerFactory;
 import java.util.List;
 import java.util.Optional;
 
+
 public class QuestionCardDAO extends JPADAO<QuestionCard, Long> {
 
     public QuestionCardDAO() {
         super(QuestionCard.class);
     }
-
-    public List<QuestionCard> findBySubjectAndAgeGroup(
-            String subject,
+    public List<QuestionCard> findByDeckAndAgeGroup(
+            Long deckId,
             String ageGroup) {
 
         try (EntityManager em = emf.createEntityManager()) {
             return em.createQuery("""
-                    SELECT q
-                    FROM QuestionCard q
-                    WHERE q.subject = :subject
-                      AND q.ageGroup = :ageGroup
-                    ORDER BY q.id
-                    """, QuestionCard.class)
-                    .setParameter("subject", subject)
+                SELECT q
+                FROM QuestionCard q
+                WHERE q.cardDeck.id = :deckId
+                  AND q.ageGroup = :ageGroup
+                ORDER BY q.id
+                """, QuestionCard.class)
+                    .setParameter("deckId", deckId)
                     .setParameter("ageGroup", ageGroup)
                     .getResultList();
         }
     }
+
+
 
     public Optional<QuestionCard> findByFingerprint(
             String fingerprint) {
@@ -47,7 +49,23 @@ public class QuestionCardDAO extends JPADAO<QuestionCard, Long> {
         }
     }
 
+    public List<QuestionCard> findBySubjectAndAgeGroup(
+            String subject,
+            String ageGroup) {
 
+        try (EntityManager em = emf.createEntityManager()) {
+            return em.createQuery("""
+                SELECT q
+                FROM QuestionCard q
+                WHERE q.subject = :subject
+                  AND q.ageGroup = :ageGroup
+                ORDER BY q.id
+                """, QuestionCard.class)
+                    .setParameter("subject", subject)
+                    .setParameter("ageGroup", ageGroup)
+                    .getResultList();
+        }
+    }
 
 
 

@@ -1,0 +1,510 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+package "Entities" {
+
+    class Coin {
+        - boolean heads
+        + flip() : String
+    }
+
+    class Monkeys {
+        - Long id
+        - int coconuts
+        - int bananas
+        - int missCards
+        + banana()
+        + coconut()
+        + addMissCard()
+    }
+
+    class Rules {
+        - String introduction
+        - String ruleSet
+        + showIntroduction()
+        + showRules()
+    }
+
+    class Menu {
+        + showMenu()
+        + openSettings()
+    }
+
+    class User {
+        - int id
+        - String username
+        - String password
+        - String email
+    }
+
+    class Game {
+        - Long id
+        - User user
+        - GameBoard gameBoard
+        - List<Player> players
+        - int currentPlayerIndex
+        - int goCount
+        + getCurrentPlayer() : Player
+        + addPlayer(player : Player)
+        + endTurn()
+    }
+
+    class Player {
+        - Long id
+        - String name
+        - int points
+        - int age
+        - int position
+        - Game game
+        - GameBoard gameBoard
+        + addPoints(points : int)
+    }
+
+    class GameBoard {
+        - Long id
+        - List<Field> field
+        - List<Player> players
+        - List<Field> fields
+        - CardDeck cardDeck
+        - String boardName
+        - String subject
+    }
+
+    class Field {
+        - Long id
+        - String type
+        - int xCoordinate
+        - int yCoordinate
+    }
+
+    class CardDeck {
+        - Long id
+        - List<QuestionCard> questionCards
+        - List<FateCard> fateCards
+        + addQuestionCard(card : QuestionCard)
+        + drawQuestionCard(ageGroup : String) : QuestionCard
+        + drawFateCard() : FateCard
+    }
+
+    class QuestionCard {
+        - Long id
+        - String subject
+        - String groupName
+        - String ageGroup
+        - String question
+        - String answer
+        - String difficulty
+        - String fingerprint
+    }
+
+    class FateCard {
+        - Long id
+        - String text
+        - String groupName
+        - String action
+    }
+
+    class Dice {
+        - int value
+        + roll() : int
+        + getValue() : int
+    }
+
+    enum BoardLength {
+        SHORT
+        MEDIUM
+        LONG
+    }
+
+    enum FateCardType {
+        NORMAL
+        MONKEY_CHALLENGE
+        SHIELD_OF_DESTINY
+    }
+}
+
+package "Controllers" {
+
+    class GameController {
+        - GameCreationService gameCreationService
+        - GameService gameService
+        + createGame
+        + getGame
+        + playTurn
+        + completeMonkeyChallenge
+        + completeCardAction
+    }
+
+    class UserController {
+        - UserService userService
+        - UserDAO userDAO
+        + createUser(ctx : Context)
+        + login(ctx : Context)
+        + logout(ctx : Context)
+        + getCurrentUser(ctx : Context)
+    }
+
+    class QuestionCardController {
+        - QuestionCardDAO questionCardDAO
+        - CardDeckDAO cardDeckDAO
+        - OpenAiQuestionCardService service
+        + registerRoutes(app : Javalin)
+    }
+
+    class LoginRequest {
+        + String username
+        + String password
+    }
+
+    class CreateUserRequest {
+        + String username
+        + String password
+        + String email
+    }
+}
+
+package "Routes" {
+
+    class Main {
+        + main(args : String[])
+    }
+
+    class Routes {
+        - GameRoute gameRoute
+        - UserRoute userRoute
+        + getRoutes() : EndpointGroup
+    }
+
+    class GameRoute {
+        - GameController gameController
+        + getRoutes() : EndpointGroup
+    }
+
+    class UserRoute {
+        - UserController userController
+        + getRoutes() : EndpointGroup
+    }
+
+    class QuestionCardRoute {
+        - QuestionCardController questionCardController
+        + getRoutes() : EndpointGroup
+        + getController() : QuestionCardController
+    }
+}
+
+package "Services" {
+
+    class GameService {
+        - Map<Long, Game> activeGames
+        - Dice dice
+        + getGame(gameId : Long) : Game
+        + playGoOrBadLuck(gameId : Long) : TurnResult
+        + completeMonkeyChallenge(gameId : Long)
+        + completeCardAction(gameId : Long)
+        - moveForward(game : Game, player : Player, amount : int)
+        - finishTurn(game : Game)
+        - saveGame(game : Game)
+    }
+
+    class GameCreationService {
+        - EntityManagerFactory emf
+        - UserDAO userDAO
+        - QuestionCardDAO questionCardDAO
+        - AgeGroupService ageGroupService
+        - OpenAiQuestionCardService aiService
+        - int MIN_QUESTION_CARDS
+        - int MAX_QUESTION_CARDS
+        - int CARDS_PER_GENERATION
+        + createGame(userId : Integer, game : Game) : Game
+        - prepareQuestionCards(game : Game)
+    }
+
+    class QuestencardService {
+        - QuestionCardDAO questionCardDAO
+        - AgeGroupService ageGroupService
+        - OpenAiQuestionCardService aiService
+        + activate(field : Field, player : Player, board : GameBoard) : QuestionCard
+    }
+
+    class OpenAiQuestionCardService {
+        - URI ENDPOINT
+        - String MODEL
+        - Set<String> DIFFICULTIES
+        - ObjectMapper mapper
+        - HttpClient client
+        - QuestionCardDAO questionCardDAO
+        - String apiKey
+        - createSchema(amountToGenerate : int) : String
+        + generateAndSaveCards(subject : String, ageGroup : String, deck : CardDeck, amountToGenerate : int) : List<QuestionCard>
+        - generateQuestions(subject : String, ageGroup : String, amountToGenerate : int) : List<GeneratedQuestion>
+        - createFingerprint(subject : String, ageGroup : String, question : String) : String
+        - normalize(value : String) : String
+    }
+
+    class GeneratedQuestion <<record>> {
+        + String question
+        + String answer
+        + String difficulty
+    }
+
+    class AgeGroupService {
+        + getAgeGroup(age : int) : String
+    }
+
+    class UserService {
+        - UserDAO userDAO
+        + login(userName : String, password : String) : UserDTO
+        + createUser(username : String, password : String, email : String) : UserDTO
+    }
+
+    class MonkeyChallengeService {
+        - Map<Long, ChallengeState> activeChallenges
+        + startChallenge(game : Game, startingPlayer : Player, dice : Dice) : ChallengeStatus
+        + drawCard(gameId : Long) : DrawResult
+        + isChallengeActive(gameId : Long) : boolean
+        + finishChallenge(gameId : Long)
+        - getActiveChallenge(gameId : Long) : ChallengeState
+        - movePlayerBack(player : Player) : String
+    }
+
+    class ChallengeState {
+        - List<Player> turnOrder
+        - List<Boolean> bag
+        - int initialCoconuts
+        - int currentPlayerIndex
+        - boolean finished
+        - isFinished() : boolean
+    }
+
+    class ChallengeStatus <<record>> {
+        + String startingPlayer
+        + int coconutCount
+        + int playerCount
+        + boolean active
+        + String message
+    }
+
+    class DrawResult <<record>> {
+        + String playerName
+        + boolean coconutDrawn
+        + boolean missed
+        + int position
+        + boolean shieldActive
+        + boolean challengeFinished
+        + String nextPlayerName
+        + int cardsRemaining
+        + String message
+    }
+}
+
+package "DAO" {
+
+    interface DAO<T, ID> {
+        + save(entity : T) : T
+        + findById(id : ID) : Optional<T>
+        + findAll() : List<T>
+        + deleteById(id : ID)
+    }
+
+    abstract class JPADAO<T, ID> {
+        # EntityManagerFactory emf
+        - Class<T> entityClass
+        + save(entity : T) : T
+        + findById(id : ID) : Optional<T>
+        + findAll() : List<T>
+        + deleteById(id : ID)
+    }
+
+    class UserDAO {
+        + create(user : User) : User
+        + getUserById(id : Integer) : User
+        + getUserByUserName(userName : String) : User
+    }
+
+    class QuestionCardDAO {
+        + findBySubjectAndAgeGroup(subject : String, ageGroup : String) : List<QuestionCard>
+        + findByFingerprint(fingerprint : String) : Optional<QuestionCard>
+        + saveIfNotExists(card : QuestionCard) : boolean
+    }
+
+    class CardDeckDAO {
+        + CardDeckDAO()
+    }
+}
+
+package "DTO" {
+
+    class UserDTO {
+        - Integer id
+        - String username
+    }
+
+    class QuestionCardDTO {
+        + String question
+        + String answer
+        + String difficulty
+    }
+
+    class GenerateQuestionCardsRequest {
+        + String subject
+        + String ageGroup
+        + Long cardDeckId
+    }
+
+    class TurnResult <<record>> {
+        + String playerName
+        + String outcome
+        + int movedFields
+        + int position
+        + String landedFieldType
+        + boolean turnContinues
+        + boolean challengeStarted
+        + FateCard fateCard
+        + QuestionCard questionCard
+        + boolean turnMustWait
+    }
+}
+
+package "Config" {
+
+    class HibernateConfig {
+        - EntityManagerFactory emf
+        + getEntityManagerFactory() : EntityManagerFactory
+        - buildProps() : Properties
+        - setDeployedProperties(props : Properties)
+        - setDevProperties(props : Properties)
+    }
+
+    class HibernateBaseProperties {
+        + createBase() : Properties
+    }
+
+    class HibernateEmfBuilder {
+        + build(props : Properties) : EntityManagerFactory
+    }
+
+    class EntityRegistry {
+        + registerEntities(configuration : Configuration)
+    }
+}
+
+package "Utils" {
+
+    class PasswordUtils {
+        + hashPassword(password : String) : String
+        + checkPassword(password : String, hashedPassword : String) : boolean
+    }
+
+    class Utils {
+        + getPropertyValue(propName : String, resourceName : String) : String
+    }
+}
+
+package "Exception" {
+
+    class ApiException {
+        - int code
+        + ApiException(code : int, msg : String)
+        + getCode() : int
+    }
+}
+
+' Entity-relationer
+
+User "1" -- "0..*" Game : owns
+Game "1" -- "1" GameBoard : uses
+Game "1" *-- "1..4" Player : players
+GameBoard "1" *-- "0..*" Field : fields
+GameBoard "1" *-- "0..1" CardDeck : cardDeck
+CardDeck "1" *-- "0..*" QuestionCard : questionCards
+CardDeck "1" *-- "0..*" FateCard : fateCards
+Player "*" -left-> "0..1" GameBoard : uses
+GameBoard "1" *-- "1" Coin : has
+FateCard "1" *-- "1" Monkeys : has
+Menu "1" --> "1" Rules : opens
+Menu ..> User : login
+
+' Routes og controllers
+
+Main ..> HibernateConfig
+Main ..> CardDeckDAO
+Main ..> QuestionCardDAO
+Main ..> OpenAiQuestionCardService
+Main ..> QuestionCardController
+Main ..> Routes
+
+Routes *-- GameRoute
+Routes *-- UserRoute
+GameRoute --> GameController
+UserRoute --> UserController
+QuestionCardRoute --> QuestionCardController
+
+GameController ..> GameCreationService
+GameController ..> GameService
+UserController ..> UserService
+UserController ..> UserDAO
+QuestionCardController ..> QuestionCardDAO
+QuestionCardController ..> CardDeckDAO
+QuestionCardController ..> OpenAiQuestionCardService
+QuestionCardController ..> GenerateQuestionCardsRequest
+QuestionCardController ..> QuestionCardDTO
+
+' Service-afhængigheder
+
+GameCreationService ..> UserDAO
+GameCreationService ..> QuestionCardDAO
+GameCreationService ..> OpenAiQuestionCardService
+GameCreationService ..> AgeGroupService
+GameCreationService ..> Game
+GameCreationService ..> EntityManagerFactory
+
+GameService ..> Game
+GameService ..> MonkeyChallengeService
+GameService ..> AgeGroupService
+GameService ..> Dice
+GameService ..> TurnResult
+
+QuestencardService ..> QuestionCardDAO
+QuestencardService ..> OpenAiQuestionCardService
+QuestencardService ..> AgeGroupService
+QuestencardService ..> QuestionCard
+
+OpenAiQuestionCardService ..> QuestionCardDAO
+OpenAiQuestionCardService ..> QuestionCard
+OpenAiQuestionCardService ..> GeneratedQuestion
+OpenAiQuestionCardService ..> CardDeck
+
+UserService ..> UserDAO
+UserService ..> UserDTO
+UserService ..> PasswordUtils
+UserService ..> ApiException
+
+MonkeyChallengeService ..> Dice
+MonkeyChallengeService ..> Player
+MonkeyChallengeService ..> Game
+MonkeyChallengeService ..> ChallengeState
+MonkeyChallengeService ..> ChallengeStatus
+MonkeyChallengeService ..> DrawResult
+
+' DAO-afhængigheder
+
+DAO <|.. JPADAO
+JPADAO <|-- UserDAO
+JPADAO <|-- QuestionCardDAO
+JPADAO <|-- CardDeckDAO
+JPADAO ..> HibernateConfig
+
+UserDAO ..> User
+QuestionCardDAO ..> QuestionCard
+CardDeckDAO ..> CardDeck
+
+' Konfiguration og hjælpeklasser
+
+HibernateConfig ..> HibernateBaseProperties
+HibernateConfig ..> HibernateEmfBuilder
+HibernateConfig ..> Utils
+HibernateEmfBuilder ..> EntityRegistry
+PasswordUtils ..> BCrypt
+ApiException ..> Logger
+
+@enduml

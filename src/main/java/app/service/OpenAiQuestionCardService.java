@@ -21,6 +21,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+
 import app.entities.CardDeck;
 
 public class OpenAiQuestionCardService {
@@ -35,50 +36,51 @@ public class OpenAiQuestionCardService {
             "meget let", "let", "middel", "svær"
     );
 
-    private static final String SCHEMA = """
-            {
-              "type": "object",
-              "properties": {
-                "questions": {
-                  "type": "array",
-                  "minItems": 10,
-                  "maxItems": 10,
-                  "items": {
-                    "type": "object",
-                    "properties": {
-                      "question": {"type": "string"},
-                      "answer": {"type": "string"},
-                      "difficulty": {
-                        "type": "string",
-                        "enum": [
-                          "meget let",
-                          "let",
-                          "middel",
-                          "svær"
-                        ]
+    private String createSchema(int amountToGenerate) {
+        return """
+                {
+                  "type": "object",
+                  "properties": {
+                    "questions": {
+                      "type": "array",
+                      "minItems": %d,
+                      "maxItems": %d,
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "question": {"type": "string"},
+                          "answer": {"type": "string"},
+                          "difficulty": {
+                            "type": "string",
+                            "enum": [
+                              "meget let",
+                              "let",
+                              "middel",
+                              "svær"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "question",
+                          "answer",
+                          "difficulty"
+                        ],
+                        "additionalProperties": false
                       }
-                    },
-                    "required": [
-                      "question",
-                      "answer",
-                      "difficulty"
-                    ],
-                    "additionalProperties": false
-                  }
+                    }
+                  },
+                  "required": ["questions"],
+                  "additionalProperties": false
                 }
-              },
-              "required": ["questions"],
-              "additionalProperties": false
-            }
-            """;
+                """.formatted(amountToGenerate, amountToGenerate);
+    }
 
     private final ObjectMapper mapper = new ObjectMapper();
     private final HttpClient client;
     private final QuestionCardDAO questionCardDAO;
     private final String apiKey;
 
-    public OpenAiQuestionCardService(
-            QuestionCardDAO questionCardDAO) {
+    public OpenAiQuestionCardService(QuestionCardDAO questionCardDAO) {
 
         this.questionCardDAO = questionCardDAO;
         this.apiKey = System.getenv("OPENAI_API_KEY");
@@ -95,8 +97,13 @@ public class OpenAiQuestionCardService {
     }
 
 
-    public List<QuestionCard> generateAndSaveCards(String subject, String ageGroup, CardDeck deck)
-            throws IOException, InterruptedException {
+    public List<QuestionCard> generateAndSaveCards(String subject, String ageGroup, CardDeck deck, int amountToGenerate
+    ) throws IOException, InterruptedException {
+        if (amountToGenerate < 1 || amountToGenerate > 10) {
+            throw new IllegalArgumentException(
+                    "Antallet af spørgsmål skal være mellem 1 og 10."
+            );
+        }
 
         if (subject == null || subject.isBlank()
                 || ageGroup == null || ageGroup.isBlank()) {
@@ -114,8 +121,7 @@ public class OpenAiQuestionCardService {
         subject = subject.strip();
         ageGroup = ageGroup.strip();
 
-        List<GeneratedQuestion> generated =
-                generateQuestions(subject, ageGroup);
+        List<GeneratedQuestion> generated = generateQuestions(subject, ageGroup, amountToGenerate);
 
         List<QuestionCard> savedCards = new ArrayList<>();
         Set<String> batchFingerprints = new HashSet<>();
@@ -137,8 +143,7 @@ public class OpenAiQuestionCardService {
                     subject, ageGroup, question
             );
 
-            // Undgå gentagelser i samme AI-generering.
-            if (!batchFingerprints.add(fingerprint)) {
+            if (!batchFingerprints.add(fingerprint)) { // Undgå gentagelser i samme AI-generering.
                 continue;
             }
 
@@ -161,9 +166,7 @@ public class OpenAiQuestionCardService {
         return savedCards;
     }
 
-    private List<GeneratedQuestion> generateQuestions(
-            String subject,
-            String ageGroup)
+    private List<GeneratedQuestion> generateQuestions(String subject, String ageGroup, int amountToGenerate)
             throws IOException, InterruptedException {
 
         var body = mapper.createObjectNode();
@@ -219,7 +222,7 @@ public class OpenAiQuestionCardService {
         input.addObject()
                 .put("role", "user")
                 .put("content", """
-                        Generer præcis 10 spørgsmålskort.
+                        Generer præcis %d spørgsmålskort.
                         
                         Emne: %s
                         Aldersgruppe: %s
@@ -238,14 +241,14 @@ public class OpenAiQuestionCardService {
                         
                         Hvert spørgsmål skal have et korrekt svar
                         og én sværhedsgrad.
-                        """.formatted(subject, ageGroup));
+                      """.formatted(amountToGenerate, subject, ageGroup));
 
         var format = body.putObject("text").putObject("format");
 
         format.put("type", "json_schema");
         format.put("name", "questencard_questions");
         format.put("strict", true);
-        format.set("schema", mapper.readTree(SCHEMA));
+        format.set("schema", mapper.readTree(createSchema(amountToGenerate)));
 
         HttpRequest request = HttpRequest.newBuilder(ENDPOINT)
                 .timeout(Duration.ofSeconds(60))
@@ -310,11 +313,15 @@ public class OpenAiQuestionCardService {
                 output.toString()
         ).path("questions");
 
-        if (!questions.isArray() || questions.size() != 10) {
+        if (!questions.isArray()
+                || questions.size() != amountToGenerate) {
             throw new IOException(
-                    "AI skal returnere præcis 10 spørgsmål."
+                    "AI skal returnere præcis "
+                            + amountToGenerate
+                            + " spørgsmål."
             );
         }
+
 
         List<GeneratedQuestion> result = new ArrayList<>();
 

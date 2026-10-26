@@ -30,4 +30,7 @@ public class Field {
         this.xCoordinate = xCoordinate;
         this.yCoordinate = yCoordinate;
     }
+
+
+
 }

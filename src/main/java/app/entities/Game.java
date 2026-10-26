@@ -24,7 +24,11 @@ public class Game {
     @ManyToOne
     private User user;
 
-    @OneToOne
+   // @OneToOne
+   // private GameBoard gameBoard;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "game_board_id", nullable = false)
     private GameBoard gameBoard;
 
     @OneToMany(

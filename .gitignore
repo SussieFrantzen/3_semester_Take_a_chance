@@ -216,4 +216,11 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# HTTP Requests
+*.env*
+!*.env.example
+src/main/resources/http/http-client.env.json
+
+.idea/
+
 # End of https://www.toptal.com/developers/gitignore/api/java,intellij,maven,windows,osx
