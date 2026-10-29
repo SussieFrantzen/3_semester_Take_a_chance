@@ -85,7 +85,6 @@ public class GameCreationService {
                 );
             }
 
-            // Initialiser de relationer, der skal bruges efter lukning.
             if (board.getCardDeck() != null) {
                 board.getCardDeck().getId();
             }
@@ -109,10 +108,10 @@ public class GameCreationService {
             );
         }
 
-        // Sørg for, at spørgsmålskort findes til spillerne.
+
         prepareQuestionCards(board, deck, request.players());
 
-        // Opret et nyt spil fra serverens validerede data.
+
         Game game = new Game();
         game.setUser(user);
         game.setGameBoard(board);
@@ -188,10 +187,10 @@ public class GameCreationService {
                 );
             }
 
-            if (player.age() < 1 || player.age() > 120) {
+            if (player.age() < 6 || player.age() > 120) {
                 throw new ApiException(
                         400,
-                        "Spillerens alder skal være mellem 1 og 120."
+                        "Spillerens alder skal være mellem 6 og 120."
                 );
             }
         }

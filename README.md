@@ -45,6 +45,25 @@ til at hente yderligere spørgsmål til spillets kortbunke.
 
 Arkitekturen er designet med henblik på fremtidig udvidelse, så der kan tilføjes flere spil.
 
+``` plaintext
+src
+├── main
+├──── java
+│      └── app
+│          ├── config
+│          ├── controllers
+│          ├── dao
+│          ├── dtos
+│          ├── entities
+│          ├── route
+│          ├── security
+│          ├── service
+│          ├── utils
+│          └── Main
+└── resources
+```
+
+
 ### Anvendte teknologier
 * Java 25 
 <br> Applikationens primære programmeringssprog.
