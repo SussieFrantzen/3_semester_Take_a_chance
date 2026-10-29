@@ -93,7 +93,7 @@ Her initieres applikationens opstart.
 <br>
 Definerer API-endpoints og forbinder indgående forespørgsler med de relevante controllere.
 
-*Controllers
+* Controllers
 <br>
 Modtager og håndterer HTTP-forespørgsler samt koordinerer svar.
 
@@ -117,7 +117,7 @@ Definerer de data, der overføres mellem API-klienter og applikationen.
 <br>
 Repræsenterer faste sæt af værdier.
 
-* Utils  
+* Utils
 <br> 
 Indeholder fælles hjælpefunktioner.
 
@@ -148,18 +148,22 @@ Følgende værktøjer indgår i testmiljøet:
 <br>
 Til udvikling og afvikling af automatiserede tests.
 <br>
+
 * Testcontainers
 <br>
 Til test med containeriserede afhængigheder, herunder PostgreSQL.
 <br>
+
 * REST Assured
 <br> 
 Til test af HTTP-endpoints og REST API-funktionalitet.
 <br>
+
 * Hamcrest
 <br> 
 Til at formulere tydelige og fleksible testbetingelser.
 <br>
+
 * Http-client
 <br>
 Til at kunne Teste Endpoints og ekstern APi.
