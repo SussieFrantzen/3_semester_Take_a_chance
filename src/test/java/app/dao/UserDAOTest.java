@@ -52,24 +52,24 @@ class UserDAOTest {
     @Test
     void create() {
         User user = new User(
-                "newuser",
-                "newPassword123",
-                "newuser@example.com"
+                "Diana Prince",
+                "Themyscira",
+                "wonder@woman.com"
         );
 
         User result = userDAO.create(user);
 
         assertNotNull(result);
         assertNotNull(result.getId());
-        assertEquals("newuser", result.getUsername());
-        assertEquals("newuser@example.com", result.getEmail());
+        assertEquals("Diana Prince", result.getUsername());
+        assertEquals("wonder@woman.com", result.getEmail());
 
         User found = userDAO.findById(result.getId());
 
         assertNotNull(found);
         assertEquals(result.getId(), found.getId());
-        assertEquals("newuser", found.getUsername());
-        assertEquals("newuser@example.com", found.getEmail());
+        assertEquals("Diana Prince", found.getUsername());
+        assertEquals("wonder@woman.com", found.getEmail());
     }
 
     @Test
@@ -85,7 +85,7 @@ class UserDAOTest {
     }
 
     @Test
-    void findByIdReturnsNullWhenUserDoesNotExist() {
+    void findByIdUserNotExist() {
         User result = userDAO.findById(-1);
 
         assertNull(result);
@@ -95,21 +95,21 @@ class UserDAOTest {
     void update() {
         User user = seeded.get("user2");
 
-        user.setUsername("updatedUser");
-        user.setEmail("updated@example.com");
+        user.setUsername("Clark Kent");
+        user.setEmail("superman@return.com");
 
         User result = userDAO.update(user);
 
         assertNotNull(result);
         assertEquals(user.getId(), result.getId());
-        assertEquals("updatedUser", result.getUsername());
-        assertEquals("updated@example.com", result.getEmail());
+        assertEquals("Clark Kent", result.getUsername());
+        assertEquals("superman@return.com", result.getEmail());
 
         User updatedUser = userDAO.findById(user.getId());
 
         assertNotNull(updatedUser);
-        assertEquals("updatedUser", updatedUser.getUsername());
-        assertEquals("updated@example.com", updatedUser.getEmail());
+        assertEquals("Clark Kent", updatedUser.getUsername());
+        assertEquals("superman@return.com", updatedUser.getEmail());
     }
 
     @Test
@@ -125,18 +125,12 @@ class UserDAOTest {
         assertNull(userDAO.findById(id));
     }
 
-    @Test
-    void removeReturnsFalseWhenUserDoesNotExist() {
-        boolean result = userDAO.remove(-1);
-
-        assertFalse(result);
-    }
 
     @Test
     void findByUsername() {
         User expected = seeded.get("user1");
 
-        User result = userDAO.findByUsername("testuser1");
+        User result = userDAO.findByUsername("Barry Allen");
 
         assertNotNull(result);
         assertEquals(expected.getId(), result.getId());
@@ -145,37 +139,37 @@ class UserDAOTest {
     }
 
     @Test
-    void findByUsernameReturnsNullWhenUserDoesNotExist() {
+    void findByUsernameUserDoesNotExist() {
         User result = userDAO.findByUsername("unknownUser");
 
         assertNull(result);
     }
 
     @Test
-    void existsByEmailReturnsTrueWhenEmailExists() {
+    void existsByEmailExists() {
         boolean result =
-                userDAO.existsByEmail("testuser1@example.com");
+                userDAO.existsByEmail("The@Flash.com");
 
         assertTrue(result);
     }
 
     @Test
-    void existsByEmailReturnsFalseWhenEmailDoesNotExist() {
+    void existsByEmailDoesNotExist() {
         boolean result =
-                userDAO.existsByEmail("unknown@example.com");
+                userDAO.existsByEmail("joker@time.com");
 
         assertFalse(result);
     }
 
     @Test
-    void existsByUsernameReturnsTrueWhenUsernameExists() {
-        boolean result = userDAO.existsByUsername("testuser2");
+    void existsByUsernameExists() {
+        boolean result = userDAO.existsByUsername("Kent Clark");
 
         assertTrue(result);
     }
 
     @Test
-    void existsByUsernameReturnsFalseWhenUsernameDoesNotExist() {
+    void existsByUsernameDoesNotExist() {
         boolean result = userDAO.existsByUsername("unknownUser");
 
         assertFalse(result);

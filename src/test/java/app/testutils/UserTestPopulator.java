@@ -24,21 +24,21 @@ public final class UserTestPopulator {
                 ).executeUpdate();
 
                 User user1 = new User(
-                        "testuser1",
-                        "testPassword123",
-                        "testuser1@example.com"
+                        "Barry Allen",
+                        "Lingting",
+                        "The@Flash.com"
                 );
 
                 User user2 = new User(
-                        "testuser2",
-                        "testPassword456",
-                        "testuser2@example.com"
+                        "Kent Clark",
+                        "Kryptonit",
+                        "Super@man.com"
                 );
 
                 User user3 = new User(
-                        "testuser3",
-                        "testPassword789",
-                        "testuser3@example.com"
+                        "Bruce Wayne",
+                        "Nightmare",
+                        "Bat@man.com"
                 );
 
                 em.persist(user1);

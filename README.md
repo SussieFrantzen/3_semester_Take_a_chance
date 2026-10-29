@@ -147,17 +147,23 @@ Følgende værktøjer indgår i testmiljøet:
 * JUnit 6
 <br>
 Til udvikling og afvikling af automatiserede tests.
+<br>
 * Testcontainers
 <br>
 Til test med containeriserede afhængigheder, herunder PostgreSQL.
+<br>
 * REST Assured
- <br> 
+<br> 
 Til test af HTTP-endpoints og REST API-funktionalitet.
+<br>
 * Hamcrest
 <br> 
 Til at formulere tydelige og fleksible testbetingelser.
+<br>
 * Http-client
+<br>
 Til at kunne Teste Endpoints og ekstern APi.
+
 
 Disse værktøjer gør det muligt at teste applikationens logik, databaseintegration og API-funktionalitet.
 

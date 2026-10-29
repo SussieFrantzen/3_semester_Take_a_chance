@@ -1,5 +1,4 @@
 package app.service;
-import app.entities.User;
 import app.config.HibernateConfig;
 import app.dao.UserDAO;
 import app.dtos.CreateGameRequest;
