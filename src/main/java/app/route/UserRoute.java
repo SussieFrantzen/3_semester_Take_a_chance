@@ -4,7 +4,6 @@ import app.controllers.UserController;
 import app.security.Role;
 import app.service.UserService;
 import io.javalin.apibuilder.EndpointGroup;
-
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class UserRoute {

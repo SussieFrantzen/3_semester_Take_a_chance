@@ -6,7 +6,6 @@ import app.entities.GameName;
 import app.utils.TransactionUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-
 import java.util.List;
 
 public class GameDAO {

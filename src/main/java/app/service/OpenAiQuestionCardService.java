@@ -2,10 +2,8 @@ package app.service;
 
 import app.dao.QuestionCardDAO;
 import app.entities.QuestionCard;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;

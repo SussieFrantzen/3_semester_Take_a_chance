@@ -6,7 +6,6 @@ import app.entities.Field;
 import app.entities.GameBoard;
 import app.entities.Player;
 import app.entities.QuestionCard;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;

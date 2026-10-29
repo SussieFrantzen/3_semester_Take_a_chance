@@ -3,7 +3,6 @@ package app.route;
 import app.controllers.GameController;
 import app.security.Role;
 import io.javalin.apibuilder.EndpointGroup;
-
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class GameRoute {

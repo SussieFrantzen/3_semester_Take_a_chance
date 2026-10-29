@@ -2,7 +2,6 @@ package app.utils;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityTransaction;
-
 import java.util.function.Supplier;
 
 public class TransactionUtil {

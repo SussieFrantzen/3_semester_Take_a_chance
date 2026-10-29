@@ -2,11 +2,9 @@ package app.service;
 
 import app.config.HibernateConfig;
 import app.entities.Player;
-
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.EntityTransaction;
-
 import java.util.List;
 
 public class PlayerProgressService {

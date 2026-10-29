@@ -4,7 +4,6 @@ import app.config.HibernateConfig;
 import app.entities.GameName;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-
 import java.util.List;
 import java.util.Optional;
 

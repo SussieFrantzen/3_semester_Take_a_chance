@@ -6,7 +6,6 @@ import app.dao.QuestionCardDAO;
 import app.security.Role;
 import app.service.OpenAiQuestionCardService;
 import io.javalin.apibuilder.EndpointGroup;
-
 import static io.javalin.apibuilder.ApiBuilder.*;
 
 public class QuestionCardRoute {

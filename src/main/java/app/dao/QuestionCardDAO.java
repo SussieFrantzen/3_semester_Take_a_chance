@@ -5,7 +5,6 @@ import app.entities.QuestionCard;
 import app.utils.TransactionUtil;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
-
 import java.util.List;
 import java.util.Optional;
 

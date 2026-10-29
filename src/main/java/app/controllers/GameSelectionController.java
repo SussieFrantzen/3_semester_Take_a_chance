@@ -7,7 +7,6 @@ import app.dtos.GameNameDTO;
 import app.entities.GameBoard;
 import app.entities.GameName;
 import io.javalin.http.Context;
-
 import java.util.List;
 
 public class GameSelectionController {
