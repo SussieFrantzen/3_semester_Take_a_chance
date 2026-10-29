@@ -13,10 +13,8 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class MonkeyChallengeService {
 
-    // true = kokosnød, false = forbierkort.
     private final Map<Long, ChallengeState> activeChallenges =
             new HashMap<>();
-
 
     public synchronized ChallengeStatus startChallenge(
             Game game,
@@ -63,7 +61,6 @@ public class MonkeyChallengeService {
             );
         }
 
-        // Terningens resultat bestemmer antallet af kokosnødder.
         int coconutCount = dice.roll();
 
         if (coconutCount < 1 || coconutCount > 6) {
@@ -72,24 +69,23 @@ public class MonkeyChallengeService {
             );
         }
 
-
         List<Player> turnOrder = new ArrayList<>();
 
         for (int i = 0; i < players.size(); i++) {
             turnOrder.add(
-                    players.get((startingIndex + i) % players.size())
+                    players.get(
+                            (startingIndex + i) % players.size()
+                    )
             );
         }
 
         List<Boolean> bag = new ArrayList<>();
-
 
         for (int i = 0; i < coconutCount; i++) {
             bag.add(true);
         }
 
         bag.add(false);
-
         Collections.shuffle(bag);
 
         ChallengeState state =
@@ -107,7 +103,6 @@ public class MonkeyChallengeService {
                         + " trækker først."
         );
     }
-
 
     public synchronized DrawResult drawCard(Long gameId) {
 
@@ -127,7 +122,6 @@ public class MonkeyChallengeService {
         String message;
 
         if (state.bag.isEmpty()) {
-            // Der er ikke flere kort at trække.
             missed = true;
             message = player.getName()
                     + " springer trækket over, fordi posen er tom.";
@@ -139,14 +133,12 @@ public class MonkeyChallengeService {
             boolean coconut = state.bag.get(randomIndex);
 
             if (coconut) {
-                // Kokosnødden fjernes permanent fra posen.
                 state.bag.remove(randomIndex);
                 coconutDrawn = true;
 
                 message = movePlayerBack(player);
 
             } else {
-                // Forbierkortet bliver i posen.
                 missed = true;
 
                 message = player.getName()
@@ -178,7 +170,6 @@ public class MonkeyChallengeService {
                 message
         );
     }
-
 
     private String movePlayerBack(Player player) {
 
@@ -229,50 +220,4 @@ public class MonkeyChallengeService {
 
         return state;
     }
-
-    private static class ChallengeState {
-
-        private final List<Player> turnOrder;
-        private final List<Boolean> bag;
-        private final int initialCoconuts;
-
-        private int currentPlayerIndex;
-        private boolean finished;
-
-        private ChallengeState(
-                List<Player> turnOrder,
-                List<Boolean> bag,
-                int initialCoconuts) {
-
-            this.turnOrder = turnOrder;
-            this.bag = bag;
-            this.initialCoconuts = initialCoconuts;
-            this.currentPlayerIndex = 0;
-            this.finished = false;
-        }
-
-        private boolean isFinished() {
-            return finished;
-        }
-    }
-
-    public record ChallengeStatus(
-            String startingPlayer,
-            int coconutCount,
-            int playerCount,
-            boolean active,
-            String message
-    ) {}
-
-    public record DrawResult(
-            String playerName,
-            boolean coconutDrawn,
-            boolean missed,
-            int position,
-            boolean shieldActive,
-            boolean challengeFinished,
-            String nextPlayerName,
-            int cardsRemaining,
-            String message
-    ) {}
 }

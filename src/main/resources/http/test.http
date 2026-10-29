@@ -2,9 +2,151 @@
 GET https://examples.http-client.intellij.net/get
     ?generated-in=IntelliJ IDEA
 
-### Test terning
+
+
+### ==========================================
+### 1. BRUGERE
+### ==========================================
+
+### Opret bruger
+POST http://localhost:7070/users/register
+Content-Type: application/json
+
+{
+  "username": "testbruger",
+  "password": "TestPassword123!",
+  "email": "testbruger@example.com"
+}
+
+###
+
+### Opret bruger2
+POST http://localhost:7070/users/register
+Content-Type: application/json
+
+{
+  "username": "testbruger2",
+  "password": "TestPassword123!",
+  "email": "testbruger2@example.com"
+}
+
+
+
+
+### Log ind
+POST http://localhost:7070/users/login
+Content-Type: application/json
+
+{
+  "username": "testbruger",
+  "password": "TestPassword123!"
+}
+
+###
+
+### Log ud
+POST http://localhost:7070/users/logout
+
+###
+
+### Hent nuværende bruger
+GET http://localhost:7070/users/me
+
+
+### ==========================================
+### 2. SPILVALG
+### ==========================================
+
+### Hent tilgængelige spilnavne
+GET http://localhost:7070/game-selection/names
+
+###
+
+### Hent spilleplader for spilnavn med ID 1
+GET http://localhost:7070/game-selection/boards?gameNameId=1
+
+
+### ==========================================
+### 3. OPRET SPIL
+### ==========================================
+
+### Opret spil for den indloggede bruger
+### Forudsætter, at brugeren er logget ind,
+### og at session-cookien bevares.
+POST http://localhost:7070/games
+Content-Type: application/json
+
+{
+  "gameBoardId": 1,
+  "players": [
+    {
+      "name": "Spiller 1",
+      "age": 12
+    },
+    {
+      "name": "Spiller 2",
+      "age": 25
+    }
+  ]
+}
+
+
+### ==========================================
+### 4. HENT SPIL
+### ==========================================
+
+### Hent spil med ID 1
+GET http://localhost:7070/games/1
+
+
+### ==========================================
+### 5. SPILTURE
+### ==========================================
+
+### Udfør spillets tur
+POST http://localhost:7070/games/1/turn
+
+
+### ==========================================
+### 6. ABEUDFORDRING
+### ==========================================
+
+### Afslut abeudfordring
+POST http://localhost:7070/games/1/monkey-challenge/complete
+
+
+### ==========================================
+### 7. KORT-HANDLING
+### ==========================================
+
+### Afslut kort-handling
+POST http://localhost:7070/games/1/card-action/complete
+
+
+### ==========================================
+### 8. SPILLERSTATUS
+### ==========================================
+
+### Markér bruger 1 som en spiller, der har spillet
+POST http://localhost:7070/games/1/users/1/played
+
+###
+
+### Kontrollér, om bruger 1 har spillet før
+GET http://localhost:7070/games/1/users/1/played
+
+
+### ==========================================
+### 9. TERNING
+### ==========================================
+
+### Kast terning
 POST http://localhost:7070/dice/roll
 
-### Test mønt
+
+### ==========================================
+### 10. MØNT
+### ==========================================
+
+### Slå plat eller krone
 POST http://localhost:7070/coin/flip
-###

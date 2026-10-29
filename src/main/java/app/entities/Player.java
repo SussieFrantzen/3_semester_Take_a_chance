@@ -40,6 +40,10 @@ public class Player {
     @JoinColumn(name = "game_id")
     private Game game;
 
+    @Column(nullable = false)
+    private boolean hasPlayedBefore = false;
+
+
     public Player(String name, int age, User user) {
         this.name = name;
         this.age = age;

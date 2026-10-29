@@ -1,6 +1,7 @@
 package app.route;
 
 import app.controllers.CoinController;
+import app.security.Role;
 import io.javalin.apibuilder.EndpointGroup;
 
 import static io.javalin.apibuilder.ApiBuilder.*;
@@ -12,7 +13,7 @@ public class CoinRoute {
 
     public EndpointGroup getRoutes() {
         return () -> {
-            post("/flip", coinController.flipCoin);
+            post("/flip", coinController.flipCoin, Role.AUTHENTICATED);
         };
     }
 }

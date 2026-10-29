@@ -41,4 +41,6 @@ public final class HibernateTestConfig {
             emf = null;
         }
     }
+
+
 }

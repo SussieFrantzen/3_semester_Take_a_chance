@@ -6,38 +6,44 @@ Studerende på EK-Lyngby
 3 semester portfolio projekt
 
 ### Vision
-Take a Chance er en læringsorienteret brætspilsapplikation,
-der gør det interaktivt og tilgængeligt at lære om sandsynlighedsberegning.
+Take a Chance er det første af en række læringsorienteret brætspilsapplikationer.
+Take a chance gør det interaktivt og tilgængeligt at lære om sandsynlighedsberegning.
+
 Applikationen er primært rettet mod undervisningsbrug og henvender sig til spillere fra 6 år og opefter.
 Spillet er designet med let humor, og let frustration så det ikke føles som en undervisnings quiz. 
+
 Den understøtter både spil for én person og multiplayer-sessioner med op til fire spillere.
 
 Applikationen er designet, så der løbende kan tilføjes flere spil.
 Den første version indeholder spillet Take a Chance,
 som fokuserer på sandsynlighedsberegning og hjælper 
-spillerne med at udforske matematiske begreber gennem spil.
+spillerne med at udforske de matematiske begreber gennem spil.
 
 ### Links
 Portfolio-hjemmeside:
 https://sussiefrantzen.github.io/portfolio/
 
-Projektvideo (maks. 5 minutter):
-<LINK – tilføjes senere>
 
 Deployet applikation (valgfrit):
-<LINK – link til DigitalOcean tilføjes senere>
+https://take-a-chance.xn--fnixdesign-0cb.com/
+
 
 Kildekode (repository):
-<LINK – tilføjes senere>
+https://github.com/SussieFrantzen/3_semester_Take_a_chance.git
 
 ### Arkitektur
 Systemoversigt
 Take a Chance er en Java-baseret applikation bygget op omkring en REST API-arkitektur. 
-Backend håndterer forespørgsler, spillets logik, dataadgang og kommunikationen med databasen.
+Backenden håndterer:
+* forespørgsler
+* spillets logik
+* dataadgang 
+* kommunikationen med databasen.
 
 Applikationen er deployeret på DigitalOcean og benytter en ekstern API 
-til at hente yderligere spørgsmål til spillets kortbunke. Arkitekturen er 
-designet med henblik på fremtidig udvidelse, så der kan tilføjes flere spil.
+til at hente yderligere spørgsmål til spillets kortbunke. 
+
+Arkitekturen er designet med henblik på fremtidig udvidelse, så der kan tilføjes flere spil.
 
 ### Anvendte teknologier
 * Java 25 
@@ -80,29 +86,49 @@ designet med henblik på fremtidig udvidelse, så der kan tilføjes flere spil.
 Applikationen er opdelt i komponenter med forskellige ansvarsområder:
 
 * Main
-  <br> Applikationens indgangspunkt, hvor opstarten initieres.
+<br>
+Her initieres applikationens opstart.
+
 * Routes
-  <br> Definerer API-endpoints og forbinder indgående forespørgsler med de relevante controllere.
-* Controllers
-  <br> Modtager og håndterer HTTP-forespørgsler samt koordinerer svar.
+<br>
+Definerer API-endpoints og forbinder indgående forespørgsler med de relevante controllere.
+
+*Controllers
+<br>
+Modtager og håndterer HTTP-forespørgsler samt koordinerer svar.
+
 * Services
-  <br> Indeholder applikationens forretningslogik og koordinerer operationer mellem komponenterne.
+<br>
+Indeholder applikationens forretningslogik og koordinerer operationer mellem komponenterne.
+
 * DAO (Data Access Objects)
-  <br> Håndterer adgang til databasen og operationer på data.
+<br> 
+Håndterer adgang til databasen og operationerne på data'en.
+
 * Entities
-  <br> Repræsenterer de dataobjekter, der lagres permanent i databasen.
+<br>
+Repræsenterer dataobjekter, der lagres permanent i databasen.
+
 * DTOs (Data Transfer Objects) 
-<br>  Definerer de data, der overføres mellem API-klienter og applikationen.
-* Interfaces
-  <br> Definerer kontrakter for komponenternes funktionalitet og implementeringer.
-* Generics  
-  <br> Understøtter genanvendelige og typesikre løsninger.
+<br>
+Definerer de data, der overføres mellem API-klienter og applikationen.
+
 * Enums
-  <br> Repræsenterer faste sæt af værdier.
+<br>
+Repræsenterer faste sæt af værdier.
+
 * Utils  
-  <br> Indeholder fælles hjælpefunktioner.
+<br> 
+Indeholder fælles hjælpefunktioner.
+
 * Exceptions
-<br> Understøtter håndtering af fejl og undtagelser.
+<br> 
+Understøtter håndtering af fejl og undtagelser.
+
+* Security
+<br>
+håndtere adgangen til endpoint om hvem der har tilgang til applikationens funktionaliteter.
+
 
 ### Database og ekstern API
 Applikationen anvender PostgreSQL som relationel database og Hibernate ORM til at mappe Java-entiteter til databasens tabeller.
@@ -112,7 +138,6 @@ mens HikariCP håndterer databaseforbindelser.
 En ekstern API anvendes til at hente yderligere spørgsmål til spillets kortbunke. Dette giver mulighed for at udvide 
 mængden af spørgsmål uden at skulle hardcode alle spørgsmål direkte i applikationen.
 
-pgAdmin anvendes som administrationsværktøj til PostgreSQL-databasen.
 
 ### Test
 Projektet indeholder et testmiljø, der bruges til at kontrollere applikationens funktionalitet og bidrage til at opretholde en høj kodekvalitet.
@@ -120,16 +145,21 @@ Projektet indeholder et testmiljø, der bruges til at kontrollere applikationens
 Følgende værktøjer indgår i testmiljøet:
 
 * JUnit 6
-  <br>Til udvikling og afvikling af automatiserede tests.
- * Testcontainers
-   <br> Til test med containeriserede afhængigheder, herunder PostgreSQL.
+<br>
+Til udvikling og afvikling af automatiserede tests.
+* Testcontainers
+<br>
+Til test med containeriserede afhængigheder, herunder PostgreSQL.
 * REST Assured
-   <br> Til test af HTTP-endpoints og REST API-funktionalitet.
+ <br> 
+Til test af HTTP-endpoints og REST API-funktionalitet.
 * Hamcrest
-   <br> Til at formulere tydelige og fleksible testbetingelser.
+<br> 
+Til at formulere tydelige og fleksible testbetingelser.
+* Http-client
+Til at kunne Teste Endpoints og ekstern APi.
 
-
-Disse værktøjer understøtter test af applikationens logik, databaseintegration og API-funktionalitet.
+Disse værktøjer gør det muligt at teste applikationens logik, databaseintegration og API-funktionalitet.
 
 ### Deployment
 Applikationen er deployeret på DigitalOcean, som leverer hostingmiljøet til at køre backend-applikationen og gøre den tilgængelig uden for det lokale udviklingsmiljø.

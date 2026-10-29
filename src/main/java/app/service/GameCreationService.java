@@ -1,31 +1,35 @@
 package app.service;
 
 import app.config.HibernateConfig;
+import app.dao.GameBoardDAO;
 import app.dao.QuestionCardDAO;
 import app.dao.UserDAO;
+import app.dtos.CreateGameRequest;
 import app.entities.CardDeck;
 import app.entities.Game;
 import app.entities.GameBoard;
 import app.entities.Player;
 import app.entities.QuestionCard;
 import app.entities.User;
-
+import app.exeption.ApiException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 public class GameCreationService {
 
+    private static final int MIN_QUESTION_CARDS = 20;
+    private static final int MAX_QUESTION_CARDS = 200;
+    private static final int CARDS_PER_GENERATION = 10;
+
     private final EntityManagerFactory emf =
             HibernateConfig.getEntityManagerFactory();
 
-    private final UserDAO userDAO = new UserDAO();
-
+    private final GameBoardDAO gameBoardDAO = new GameBoardDAO();
     private final QuestionCardDAO questionCardDAO =
             new QuestionCardDAO();
 
@@ -36,53 +40,106 @@ public class GameCreationService {
             new OpenAiQuestionCardService(questionCardDAO);
 
 
-    public Game createGame(Integer userId, Game game)
-            throws IOException, InterruptedException {
 
-        if (userId == null || game == null) {
-            throw new IllegalArgumentException(
-                    "Bruger og spil skal angives."
+    public Game createGame(Integer userId, CreateGameRequest request) throws IOException, InterruptedException {
+
+        if (userId == null) {
+            throw new ApiException(401, "Du skal være logget ind.");
+        }
+
+        if (request == null || request.gameBoardId() == null) {
+            throw new ApiException(
+                    400,
+                    "Du skal vælge en spilleplade."
             );
         }
 
-        User user = userDAO.getUserById(userId);
+        validatePlayers(request.players());
 
-        if (game.getGameBoard() == null) {
-            throw new IllegalStateException(
-                    "Spillet mangler en spilleplade."
+
+        User user;
+        GameBoard board;
+
+        try (EntityManager em = emf.createEntityManager()) {
+
+            UserDAO userDAO = new UserDAO(em);
+
+            user = userDAO.findById(userId);
+
+            if (user == null) {
+                throw new ApiException(
+                        404,
+                        "Brugeren blev ikke fundet."
+                );
+            }
+
+            board = em.find(
+                    GameBoard.class,
+                    request.gameBoardId()
+            );
+
+            if (board == null) {
+                throw new ApiException(
+                        404,
+                        "Den valgte spilleplade blev ikke fundet."
+                );
+            }
+
+            // Initialiser de relationer, der skal bruges efter lukning.
+            if (board.getCardDeck() != null) {
+                board.getCardDeck().getId();
+            }
+        }
+
+
+        CardDeck deck = board.getCardDeck();
+
+        if (deck == null || deck.getId() == null) {
+            throw new ApiException(
+                    409,
+                    "Den valgte spilleplade mangler en kortbunke."
             );
         }
 
-        if (game.getGameBoard().getCardDeck() == null) {
-            throw new IllegalStateException(
-                    "Spillepladen mangler en kortbunke."
+        if (board.getSubject() == null
+                || board.getSubject().isBlank()) {
+            throw new ApiException(
+                    409,
+                    "Spillepladen mangler et emne."
             );
         }
 
-        if (game.getPlayers().isEmpty()) {
-            throw new IllegalStateException(
-                    "Spillet skal have mindst én spiller."
-            );
-        }
+        // Sørg for, at spørgsmålskort findes til spillerne.
+        prepareQuestionCards(board, deck, request.players());
 
-        if (game.getPlayers().size() > 4) {
-            throw new IllegalStateException(
-                    "Der må højst være fire spillere."
-            );
-        }
-
+        // Opret et nyt spil fra serverens validerede data.
+        Game game = new Game();
         game.setUser(user);
+        game.setGameBoard(board);
+        game.setCurrentPlayerIndex(0);
+        game.setGoCount(0);
 
-        prepareQuestionCards(game);
+        for (CreateGameRequest.CreatePlayerRequest playerRequest
+                : request.players()) {
+
+            Player player = new Player(
+                    playerRequest.name().trim(),
+                    playerRequest.age(),
+                    null
+            );
+
+            game.addPlayer(player);
+        }
 
         EntityManager em = emf.createEntityManager();
 
         try {
             em.getTransaction().begin();
-
             Game savedGame = em.merge(game);
-
             em.getTransaction().commit();
+            savedGame.getPlayers().size();
+            savedGame.getGameBoard().getBoardName();
+            savedGame.getGameBoard().getGameName().getName();
 
             return savedGame;
 
@@ -90,51 +147,81 @@ public class GameCreationService {
             if (em.getTransaction().isActive()) {
                 em.getTransaction().rollback();
             }
-
             throw e;
 
         } finally {
             em.close();
         }
     }
-    private static final int MIN_QUESTION_CARDS = 20;
-    private static final int MAX_QUESTION_CARDS = 200;
-    private static final int CARDS_PER_GENERATION = 10;
 
-    private void prepareQuestionCards(Game game)
-            throws IOException, InterruptedException {
-
-        GameBoard board = game.getGameBoard();
-        CardDeck deck = board.getCardDeck();
-        String subject = board.getSubject();
-
-        if (subject == null || subject.isBlank()) {
-            throw new IllegalStateException(
-                    "Spillepladen mangler et emne."
+    private void validatePlayers(
+            List<CreateGameRequest.CreatePlayerRequest> players
+    ) {
+        if (players == null || players.isEmpty()) {
+            throw new ApiException(
+                    400,
+                    "Spillet skal have mindst én spiller."
             );
         }
 
+        if (players.size() > 4) {
+            throw new ApiException(
+                    400,
+                    "Der må højst være fire spillere."
+            );
+        }
+
+        for (CreateGameRequest.CreatePlayerRequest player : players) {
+            if (player == null
+                    || player.name() == null
+                    || player.name().isBlank()) {
+                throw new ApiException(
+                        400,
+                        "Alle spillere skal have et navn."
+                );
+            }
+
+            if (player.name().trim().length() > 100) {
+                throw new ApiException(
+                        400,
+                        "Spillernavne må højst være 100 tegn."
+                );
+            }
+
+            if (player.age() < 1 || player.age() > 120) {
+                throw new ApiException(
+                        400,
+                        "Spillerens alder skal være mellem 1 og 120."
+                );
+            }
+        }
+    }
+
+    private void prepareQuestionCards(
+            GameBoard board,
+            CardDeck deck,
+            List<CreateGameRequest.CreatePlayerRequest> players
+    ) throws IOException, InterruptedException {
+
         Set<String> preparedAgeGroups = new HashSet<>();
 
-        for (Player player : game.getPlayers()) {
+        for (CreateGameRequest.CreatePlayerRequest player : players) {
 
             String ageGroup =
-                    ageGroupService.getAgeGroup(player.getAge());
+                    ageGroupService.getAgeGroup(player.age());
 
-            // Behandl kun hver aldersgruppe én gang.
             if (!preparedAgeGroups.add(ageGroup)) {
                 continue;
             }
 
             List<QuestionCard> cards =
-                    questionCardDAO.findBySubjectAndAgeGroup(
-                            subject, ageGroup
+                    questionCardDAO.findByDeckAndAgeGroup(
+                            deck.getId(),
+                            ageGroup
                     );
 
             int existingCount = cards.size();
 
-            // Hvis der allerede er mindst 20 spørgsmål,
-            // skal der ikke genereres flere.
             while (existingCount < MIN_QUESTION_CARDS
                     && existingCount < MAX_QUESTION_CARDS) {
 
@@ -143,28 +230,25 @@ public class GameCreationService {
                         MAX_QUESTION_CARDS - existingCount
                 );
 
-                List<QuestionCard> generated =
-                        aiService.generateAndSaveCards(
-                                subject,
-                                ageGroup,
-                                deck,
-                                amountToGenerate
-                        );
+                aiService.generateAndSaveCards(
+                        board.getSubject(),
+                        ageGroup,
+                        deck,
+                        amountToGenerate
+                );
 
-                // Hent det faktiske antal fra databasen igen.
-                cards = questionCardDAO.findBySubjectAndAgeGroup(
-                        subject, ageGroup
+                cards = questionCardDAO.findByDeckAndAgeGroup(
+                        deck.getId(),
+                        ageGroup
                 );
 
                 int newCount = cards.size();
 
-                // Undgå et uendeligt loop, hvis AI'en
-                // kun returnerer dubletter.
                 if (newCount <= existingCount) {
-                    throw new IllegalStateException(
-                            "Der kunne ikke gemmes nok nye spørgsmål "
-                                    + "til aldersgruppen " + ageGroup
-                                    + ". Prøv igen."
+                    throw new ApiException(
+                            503,
+                            "Der kunne ikke genereres nok nye spørgsmål "
+                                    + "til aldersgruppen " + ageGroup + "."
                     );
                 }
 
@@ -172,149 +256,12 @@ public class GameCreationService {
             }
 
             if (existingCount < MIN_QUESTION_CARDS) {
-                throw new IllegalStateException(
-                        "Der er færre end 20 spørgsmål til aldersgruppen "
-                                + ageGroup
+                throw new ApiException(
+                        503,
+                        "Der findes ikke nok spørgsmål til aldersgruppen "
+                                + ageGroup + "."
                 );
-            }
-
-            // Sørg for, at kortene er knyttet til den aktuelle bunke.
-            for (QuestionCard card : cards) {
-                deck.addQuestionCard(card);
             }
         }
     }
-
-   /*
-    private static final int MIN_QUESTION_CARDS = 20;
-    private static final int MAX_QUESTION_CARDS = 200;
-    private static final int CARDS_PER_GENERATION = 10;
-
-    private void prepareQuestionCards(Game game)
-            throws IOException, InterruptedException {
-
-        GameBoard board = game.getGameBoard();
-        CardDeck deck = board.getCardDeck();
-        String subject = board.getSubject();
-
-        if (subject == null || subject.isBlank()) {
-            throw new IllegalStateException(
-                    "Spillepladen mangler et emne."
-            );
-        }
-
-        Set<String> preparedAgeGroups = new HashSet<>();
-
-        for (Player player : game.getPlayers()) {
-            String ageGroup =
-                    ageGroupService.getAgeGroup(player.getAge());
-
-            // Undgå at kontrollere samme aldersgruppe flere gange.
-            if (!preparedAgeGroups.add(ageGroup)) {
-                continue;
-            }
-
-            List<QuestionCard> cards =
-                    questionCardDAO.findBySubjectAndAgeGroup(
-                            subject, ageGroup
-                    );
-
-            int existingCount = cards.size();
-
-// Hvis der er mindst 20 spørgsmål, skal der ikke genereres flere.
-            if (existingCount >= MIN_QUESTION_CARDS) {
-                continue;
-            }
-
-// Beregn, hvor mange pladser der er tilbage op til 200.
-            int remainingCapacity = MAX_QUESTION_CARDS - existingCount;
-
-            if (remainingCapacity <= 0) {
-                continue;
-            }
-
-// Generér højst 10 spørgsmål og aldrig flere end den resterende plads.
-            int amountToGenerate =
-                    Math.min(CARDS_PER_GENERATION, remainingCapacity);
-
-// Generér det beregnede antal spørgsmål.
-            aiService.generateAndSaveCards(
-                    subject,
-                    ageGroup,
-                    deck,
-                    amountToGenerate
-            );
-        }
-    }
-
-    */
-/*
-    private void prepareQuestionCards(Game game)
-            throws IOException, InterruptedException {
-
-        GameBoard board = game.getGameBoard();
-        CardDeck deck = board.getCardDeck();
-
-        String subject = board.getSubject();
-
-        if (subject == null || subject.isBlank()) {
-            throw new IllegalStateException(
-                    "Spillepladen mangler et emne."
-            );
-        }
-
-        Set<String> preparedAgeGroups = new HashSet<>();
-
-        for (Player player : game.getPlayers()) {
-
-            String ageGroup =
-                    ageGroupService.getAgeGroup(player.getAge());
-
-            if (!preparedAgeGroups.add(ageGroup)) {
-                continue;
-            }
-
-            List<QuestionCard> cards =
-                    questionCardDAO.findBySubjectAndAgeGroup(
-                            subject, ageGroup
-                    );
-
-
-            if (cards.size() < 200) {
-                aiService.generateAndSaveCards(subject, ageGroup, deck);
-
-                cards = questionCardDAO.findBySubjectAndAgeGroup(
-                        subject, ageGroup
-                );
-            }
-
-
-            if (cards.isEmpty()) {
-                throw new IllegalStateException(
-                        "Der findes ingen spørgsmål til aldersgruppen "
-                                + ageGroup
-                );
-            }
-
-            for (QuestionCard card : cards) {
-
-                boolean alreadyAdded =
-                        deck.getQuestionCards()
-                                .stream()
-                                .anyMatch(existing ->
-                                        existing.getId() != null
-                                                && Objects.equals(
-                                                existing.getId(),
-                                                card.getId()
-                                        )
-                                );
-
-                if (!alreadyAdded) {
-                    deck.addQuestionCard(card);
-                }
-            }
-        }
-    }
-
- */
 }

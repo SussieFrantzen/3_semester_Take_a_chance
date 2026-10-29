@@ -207,7 +207,6 @@ package "Services" {
     }
 
     class GameCreationService {
-        - EntityManagerFactory emf
         - UserDAO userDAO
         - QuestionCardDAO questionCardDAO
         - AgeGroupService ageGroupService
@@ -299,21 +298,6 @@ package "Services" {
 
 package "DAO" {
 
-    interface DAO<T, ID> {
-        + save(entity : T) : T
-        + findById(id : ID) : Optional<T>
-        + findAll() : List<T>
-        + deleteById(id : ID)
-    }
-
-    abstract class JPADAO<T, ID> {
-        # EntityManagerFactory emf
-        - Class<T> entityClass
-        + save(entity : T) : T
-        + findById(id : ID) : Optional<T>
-        + findAll() : List<T>
-        + deleteById(id : ID)
-    }
 
     class UserDAO {
         + create(user : User) : User
@@ -365,55 +349,13 @@ package "DTO" {
     }
 }
 
-package "Config" {
 
-    class HibernateConfig {
-        - EntityManagerFactory emf
-        + getEntityManagerFactory() : EntityManagerFactory
-        - buildProps() : Properties
-        - setDeployedProperties(props : Properties)
-        - setDevProperties(props : Properties)
-    }
-
-    class HibernateBaseProperties {
-        + createBase() : Properties
-    }
-
-    class HibernateEmfBuilder {
-        + build(props : Properties) : EntityManagerFactory
-    }
-
-    class EntityRegistry {
-        + registerEntities(configuration : Configuration)
-    }
-}
-
-package "Utils" {
-
-    class PasswordUtils {
-        + hashPassword(password : String) : String
-        + checkPassword(password : String, hashedPassword : String) : boolean
-    }
-
-    class Utils {
-        + getPropertyValue(propName : String, resourceName : String) : String
-    }
-}
-
-package "Exception" {
-
-    class ApiException {
-        - int code
-        + ApiException(code : int, msg : String)
-        + getCode() : int
-    }
-}
 
 ' Entity-relationer
 
 User "1" -- "0..*" Game : owns
 Game "1" -- "1" GameBoard : uses
-Game "1" *-- "1..4" Player : players
+Game "1" *--- "1..4" Player : players
 GameBoard "1" *-- "0..*" Field : fields
 GameBoard "1" *-- "0..1" CardDeck : cardDeck
 CardDeck "1" *-- "0..*" QuestionCard : questionCards
@@ -426,18 +368,18 @@ Menu ..> User : login
 
 ' Routes og controllers
 
-Main ..> HibernateConfig
+
 Main ..> CardDeckDAO
 Main ..> QuestionCardDAO
 Main ..> OpenAiQuestionCardService
 Main ..> QuestionCardController
 Main ..> Routes
 
-Routes *-- GameRoute
-Routes *-- UserRoute
-GameRoute --> GameController
-UserRoute --> UserController
-QuestionCardRoute --> QuestionCardController
+Routes *--- GameRoute
+Routes *--- UserRoute
+GameRoute ---> GameController
+UserRoute ---> UserController
+QuestionCardRoute ---> QuestionCardController
 
 GameController ..> GameCreationService
 GameController ..> GameService
@@ -456,7 +398,7 @@ GameCreationService ..> QuestionCardDAO
 GameCreationService ..> OpenAiQuestionCardService
 GameCreationService ..> AgeGroupService
 GameCreationService ..> Game
-GameCreationService ..> EntityManagerFactory
+
 
 GameService ..> Game
 GameService ..> MonkeyChallengeService
@@ -476,8 +418,7 @@ OpenAiQuestionCardService ..> CardDeck
 
 UserService ..> UserDAO
 UserService ..> UserDTO
-UserService ..> PasswordUtils
-UserService ..> ApiException
+
 
 MonkeyChallengeService ..> Dice
 MonkeyChallengeService ..> Player
@@ -487,24 +428,9 @@ MonkeyChallengeService ..> ChallengeStatus
 MonkeyChallengeService ..> DrawResult
 
 ' DAO-afhængigheder
-
-DAO <|.. JPADAO
-JPADAO <|-- UserDAO
-JPADAO <|-- QuestionCardDAO
-JPADAO <|-- CardDeckDAO
-JPADAO ..> HibernateConfig
-
 UserDAO ..> User
 QuestionCardDAO ..> QuestionCard
 CardDeckDAO ..> CardDeck
 
-' Konfiguration og hjælpeklasser
-
-HibernateConfig ..> HibernateBaseProperties
-HibernateConfig ..> HibernateEmfBuilder
-HibernateConfig ..> Utils
-HibernateEmfBuilder ..> EntityRegistry
-PasswordUtils ..> BCrypt
-ApiException ..> Logger
 
 @enduml

@@ -9,7 +9,7 @@ import app.entities.Field;
 import app.entities.Game;
 import app.entities.Player;
 import app.entities.QuestionCard;
-
+import app.exeption.ApiException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 
@@ -39,27 +39,26 @@ public class GameService {
             new HashMap<>();
 
 
-
     public synchronized Game getGame(Long gameId) {
         Game existingGame = activeGames.get(gameId);
 
-        if (existingGame != null) { // tjekker om spillet findes i aktivGames allerede.
+        if (existingGame != null) {
             return existingGame;
         }
 
         EntityManager em = emf.createEntityManager();
 
         try {
-            Game game = em.find(Game.class, gameId);  // forsøger at finde spil fra database ud fra spil-ID
+            Game game = em.find(Game.class, gameId);
 
             if (game == null) {
-                throw new NoSuchElementException(  // TODO bør finde måde at rette brugervenlighed
+                throw new NoSuchElementException(
                         "Spillet blev ikke fundet."
                 );
             }
 
-            game.getPlayers().size(); // henter information om spiller antal
-            game.getGameBoard().getFields().size(); // antal spilfelter.
+            game.getPlayers().size();
+            game.getGameBoard().getFields().size();
 
             CardDeck deck = game.getGameBoard().getCardDeck();
 
@@ -78,54 +77,53 @@ public class GameService {
     }
 
 
-    public synchronized TurnResult playGoOrBadLuck(Long gameId) {
+    public synchronized TurnResult playGoOrBadLuck(Long gameId, Integer userId) {
 
-        Game game = getGame(gameId); // bruger metoden ovenover
+        Game game = getGameForUser(gameId, userId);
 
-        if (monkeyService.isChallengeActive(gameId)) { // tjekker om abeudfordringen er igang
+        if (monkeyService.isChallengeActive(gameId)) {
             throw new IllegalStateException(
                     "Abeudfordringen skal afsluttes først."
             );
         }
 
-        Player player = game.getCurrentPlayer(); // spilleren hvis tur det er hentes
+        Player player = game.getCurrentPlayer();
 
-        boolean go = ThreadLocalRandom.current().nextBoolean();  // Tilfældigt udfald: GO eller BAD LUCK.
+        boolean go = ThreadLocalRandom.current().nextBoolean();
 
-        String outcome = go ? "GO" : "BAD LUCK"; // bruger en ternary operator til at vælge en tekst:
+        String outcome = go ? "GO" : "BAD LUCK";
 
-        int movedFields = 0; // variabel for antal felter der må rykkes
-        boolean turnContinues = false; // variabel for om spillerens turen kan forsættes eller afsluttes.
+        int movedFields = 0;
+        boolean turnContinues = false;
 
         if (go) {
             game.setGoCount(game.getGoCount() + 1);
 
-            if (game.getGoCount() == 1) { // Første GO giver et nyt forsøg.
+            if (game.getGoCount() == 1) {
                 turnContinues = true;
             } else {
-                movedFields = 2;// Anden GO flytter spilleren to felter.
+                movedFields = 2;
             }
 
         } else {
-            if (game.getGoCount() == 1) { // GO efterfulgt af BAD LUCK:
-                movedFields = 1; // ét felt frem.
+            if (game.getGoCount() == 1) {
+                movedFields = 1;
             }
 
-            // BAD LUCK ved første forsøg vil spilleren bliver stående derfor ikke behøves en if for det.
         }
 
-        String landedFieldType = null; // Variabel for typen af det felt, spilleren lander på.
-        FateCard fateCard = null; // objekt af skæbnekort der måske trækkes.
-        QuestionCard questionCard = null; // objekt af spørgsmålskort der måske trækkes
-        boolean challengeStarted = false; // boolean og en udfordring er igang.
+        String landedFieldType = null;
+        FateCard fateCard = null;
+        QuestionCard questionCard = null;
+        boolean challengeStarted = false;
 
-        if (movedFields > 0) { // hvis variablen for antal felter der må rykkes er større end 0
-            moveForward(game, player, movedFields); // flyttes spilleren frem med det angivet antal felter der må rykkes
+        if (movedFields > 0) {
+            moveForward(game, player, movedFields);
 
-            landedFieldType = getCurrentFieldType(game, player); // det landefelt tjekkes hvilken type det er spilleren er landet på
+            landedFieldType = getCurrentFieldType(game, player);
 
-            if ("FATEFIELD".equals(landedFieldType)) { // hvis det er et skæbnefelt
-                CardDeck deck = game.getGameBoard().getCardDeck(); // kortbunken hentes
+            if ("FATEFIELD".equals(landedFieldType)) {
+                CardDeck deck = game.getGameBoard().getCardDeck();
 
                 if (deck == null) {
                     throw new IllegalStateException(
@@ -133,7 +131,7 @@ public class GameService {
                     );
                 }
 
-                fateCard = deck.drawFateCard(); // der trækkes et skæbnekort fra bunken
+                fateCard = deck.drawFateCard();
 
                 if (fateCard == null) {
                     throw new IllegalStateException(
@@ -142,7 +140,7 @@ public class GameService {
                 }
 
 
-                if ("MONKEY_CHALLENGE".equalsIgnoreCase( // Hvis skæbnekortet er en Monkey_challenge aktiveres abeudfordringen.
+                if ("MONKEY_CHALLENGE".equalsIgnoreCase(
                         fateCard.getAction())) {
 
                     monkeyService.startChallenge(game, player, dice);
@@ -150,8 +148,8 @@ public class GameService {
                     challengeStarted = true;
                 }
 
-            } else if ("QUESTIONFIELD".equals(landedFieldType)) { // hvis feltet er et spørgsmålsfelt
-                CardDeck deck = game.getGameBoard().getCardDeck(); // hentes kortbunken
+            } else if ("QUESTIONFIELD".equals(landedFieldType)) {
+                CardDeck deck = game.getGameBoard().getCardDeck();
 
                 if (deck == null) {
                     throw new IllegalStateException(
@@ -159,7 +157,7 @@ public class GameService {
                     );
                 }
 
-                String ageGroup = ageGroupService.getAgeGroup(player.getAge()); // spillerens alder hentes ned
+                String ageGroup = ageGroupService.getAgeGroup(player.getAge());
 
                 List<QuestionCard> matchingCards =
                         questionCardDAO.findByDeckAndAgeGroup(
@@ -168,10 +166,9 @@ public class GameService {
                         );
 
                 if (matchingCards.isEmpty()) {
-                    throw new IllegalStateException(
-                            "Der findes ingen spørgsmål til aldersgruppen "
-                                    + ageGroup
-                    );
+                    throw new IllegalStateException
+                            ("Der findes ingen spørgsmål til aldersgruppen " + ageGroup
+                            );
                 }
 
                 int index = ThreadLocalRandom.current()
@@ -194,7 +191,7 @@ public class GameService {
                 || fateCard != null;
 
 
-        if (questionCard != null || fateCard != null) { //Registrer, om der er trukket et kort.
+        if (questionCard != null || fateCard != null) {
             pendingCardActions.put(gameId, true);
         }
 
@@ -204,12 +201,12 @@ public class GameService {
             saveGame(game);
         }
 
-        return new TurnResult( player.getName(), outcome, movedFields, player.getPosition(), landedFieldType,
+        return new TurnResult(player.getName(), outcome, movedFields, player.getPosition(), landedFieldType,
                 turnContinues, challengeStarted, fateCard, questionCard, turnMustWait
         );
     }
 
-    private void moveForward( Game game, Player player, int amount) {
+    private void moveForward(Game game, Player player, int amount) {
         List<Field> fields = game.getGameBoard().getFields();
 
         if (fields.isEmpty()) {
@@ -219,17 +216,17 @@ public class GameService {
         }
 
         int newPosition = Math.min(
-                player.getPosition() + amount, fields.size() - 1  // flytter spilleren men forhindre i at komme længere end antal felter spillet udgør.
-        );
+                player.getPosition() +
+                        amount, fields.size() - 1);
 
-        player.setPosition(newPosition); // den nye position sættes.
+        player.setPosition(newPosition);
     }
 
-    private String getCurrentFieldType(Game game, Player player) {// finder ud af hvad type felt der er landet på.
+    private String getCurrentFieldType(Game game, Player player) {
 
         List<Field> fields = game.getGameBoard().getFields();
 
-        int position = player.getPosition(); // angiver hvor spilleren står
+        int position = player.getPosition();
 
         if (position < 0 || position >= fields.size()) {
             throw new IllegalStateException(
@@ -237,28 +234,27 @@ public class GameService {
             );
         }
 
-        return fields.get(position).getType().toUpperCase(Locale.ROOT); // returnere hvad hvilken type felt spilleren er på.
+        return fields.get(position).getType().toUpperCase(Locale.ROOT);
     }
 
 
+    public synchronized void completeMonkeyChallenge(Long gameId, Integer userId) {
 
-    public synchronized void completeMonkeyChallenge(Long gameId) {
+        Game game = getGameForUser(gameId, userId);
 
-        Game game = getGame(gameId);
-
-        if (!monkeyService.isChallengeActive(gameId)) { //undersøger, om der er en aktiv abeudfordring.
+        if (!monkeyService.isChallengeActive(gameId)) {
             throw new IllegalStateException(
                     "Der er ingen aktiv abeudfordring."
             );
         }
-        monkeyService.finishChallenge(gameId); // kalder metode der tjekker om det kan sluttes
-        finishTurn(game); // turen afsluttes
-        saveGame(game); // gemmer spillets status.
+        monkeyService.finishChallenge(gameId);
+        finishTurn(game);
+        saveGame(game);
     }
 
 
-    public synchronized void completeCardAction(Long gameId) {
-        Game game = getGame(gameId);
+    public synchronized void completeCardAction(Long gameId, Integer userId) {
+        Game game = getGameForUser(gameId, userId);
 
         if (monkeyService.isChallengeActive(gameId)) {
             throw new IllegalStateException(
@@ -283,7 +279,7 @@ public class GameService {
         game.setGoCount(0);
     }
 
-    private void saveGame(Game game) { // gemmer spil til databasen
+    private void saveGame(Game game) {
         EntityManager em = emf.createEntityManager();
 
         try {
@@ -303,17 +299,24 @@ public class GameService {
         }
     }
 
-    public record TurnResult( // TODO overvej om denne skal rykkes til egen klasse.
-            String playerName,
-            String outcome,
-            int movedFields,
-            int position,
-            String landedFieldType,
-            boolean turnContinues,
-            boolean challengeStarted,
-            FateCard fateCard,
-            QuestionCard questionCard,
-            boolean turnMustWait
+
+    public synchronized Game getGameForUser(
+            Long gameId,
+            Integer userId
     ) {
+        if (userId == null) {
+            throw new ApiException(401, "Du skal være logget ind.");
+        }
+        Game game = getGame(gameId);
+
+        if (game.getUser() == null
+                || !userId.equals(game.getUser().getId())) {
+            throw new ApiException(
+                    403,
+                    "Du har ikke adgang til dette spil."
+            );
+        }
+        return game;
     }
+
 }

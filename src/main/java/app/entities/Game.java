@@ -24,9 +24,6 @@ public class Game {
     @ManyToOne
     private User user;
 
-   // @OneToOne
-   // private GameBoard gameBoard;
-
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "game_board_id", nullable = false)
     private GameBoard gameBoard;
@@ -35,37 +32,39 @@ public class Game {
             mappedBy = "game",
             cascade = CascadeType.ALL
     )
-    @OrderBy("id ASC") // stigende rækkefølge
+    @OrderBy("id ASC")
     private List<Player> players = new ArrayList<>();
 
 
     @Column(nullable = false)
-    private int currentPlayerIndex = 0; // for at gemme index af hvilken spiller der har tur.
+    private int currentPlayerIndex = 0;
 
 
     @Column(nullable = false)
-    private int goCount = 0; // Go er når spillerens trykker på en knap for at se om de må rykke eller skal blive stående i deres tur.
+    private int goCount = 0;
 
-    public Player getCurrentPlayer() {  // metode til at finde den spiller der har tur
+
+
+    public Player getCurrentPlayer() {
         if (players.isEmpty()) {
             throw new IllegalStateException(
                     "Spillet har ingen spillere."
             );
         }
 
-        return players.get(currentPlayerIndex); // returner den spiller hvis tur det er
+        return players.get(currentPlayerIndex);
     }
 
     public void addPlayer(Player player) {
-        if (players.size() >= 4) { // tjekker antallet af tilknyttet spiller til aktuel spil. Hvis der er 4 spiller kan der ikke tilføjes flere
+        if (players.size() >= 4) {
             throw new IllegalStateException(
                     "Der må højst være 4 spillere."
             );
         }
 
-        player.setGame(this); // her forbindes spilleren til det aktuelle spil
-        player.setGameBoard(gameBoard); // spilbræt tilknyttes til spilleren.
-        players.add(player); // tilføjer spilleren til spillet
+        player.setGame(this);
+        player.setGameBoard(gameBoard);
+        players.add(player);
     }
 
     public void endTurn() {
@@ -73,7 +72,6 @@ public class Game {
             return;
         }
         currentPlayerIndex =(currentPlayerIndex + 1) % players.size();
-        // når den nuværende spiller er færdig med sin tur bliver det næste og når alle deltager har været igennem starter den forfra ved 0
     }
 
 
