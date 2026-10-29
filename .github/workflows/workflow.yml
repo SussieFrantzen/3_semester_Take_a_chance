@@ -36,4 +36,4 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/Take_a_Chance_api:latest
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/take_a_chance_api:latest
