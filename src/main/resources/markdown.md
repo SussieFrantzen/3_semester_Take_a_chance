@@ -68,7 +68,7 @@ Eksempel på request body ved registrering:
 
 ````json
  {
-"username": "bruger",
+"username": "Barry Allen",
 "password": "password!",
 "email": "burger@example.com"
 }
@@ -81,7 +81,7 @@ Eksempel på request body ved registrering:
 Eksempel på request body ved registrering:
 ````json
 {
-"username": "testbruger",
+"username": "Barry Allen",
 "password": "TestPassword123!"
 }
 ````
